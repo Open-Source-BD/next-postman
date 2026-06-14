@@ -5,12 +5,34 @@ interface JsonTreeProps {
   data: unknown;
   /** Pretty-printed text for the copy button. */
   rawText: string;
+  /** Optional case-insensitive filter on keys/values. */
+  query?: string;
 }
 
-export function JsonTree({ data, rawText }: JsonTreeProps) {
+function matches(v: unknown, q: string): boolean {
+  if (v === null) return 'null'.includes(q);
+  if (typeof v !== 'object') return String(v).toLowerCase().includes(q);
+  if (Array.isArray(v)) return v.some((e) => matches(e, q));
+  return Object.entries(v).some(([k, val]) => k.toLowerCase().includes(q) || matches(val, q));
+}
+
+function prune(v: unknown, q: string): unknown {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.filter((e) => matches(e, q)).map((e) => prune(e, q));
+  const out: Record<string, unknown> = {};
+  for (const [k, val] of Object.entries(v)) {
+    if (k.toLowerCase().includes(q) || matches(val, q)) out[k] = prune(val, q);
+  }
+  return out;
+}
+
+export function JsonTree({ data, rawText, query }: JsonTreeProps) {
   const [defaultOpen, setDefaultOpen] = useState(true);
   const [version, setVersion] = useState(0);
   const [copied, setCopied] = useState(false);
+
+  const q = query?.trim().toLowerCase();
+  const view = q ? prune(data, q) : data;
 
   const copy = () => {
     navigator.clipboard.writeText(rawText);
@@ -36,7 +58,7 @@ export function JsonTree({ data, rawText }: JsonTreeProps) {
         </button>
       </div>
       <div className="jt-scroll">
-        <JsonNode key={version} keyName={undefined} value={data} depth={0} isLast defaultOpen={defaultOpen} />
+        <JsonNode key={`${version}-${q ?? ''}`} keyName={undefined} value={view} depth={0} isLast defaultOpen={defaultOpen} />
       </div>
     </div>
   );

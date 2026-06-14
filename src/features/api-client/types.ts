@@ -1,7 +1,7 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS';
 
 export type RequestSubTab = 'params' | 'auth' | 'headers' | 'body' | 'scripts' | 'tests';
-export type ResponseSubTab = 'body' | 'headers' | 'types' | 'testresults';
+export type ResponseSubTab = 'body' | 'headers' | 'types' | 'cookies' | 'testresults';
 export type SidebarTab = 'history' | 'collections';
 
 export type KvItemType = 'text' | 'file';
@@ -31,7 +31,7 @@ export interface AuthConfig {
   jwtPrefix: string;
 }
 
-export type BodyType = 'none' | 'formdata' | 'urlencoded' | 'raw';
+export type BodyType = 'none' | 'formdata' | 'urlencoded' | 'raw' | 'graphql';
 export type RawType = 'application/json' | 'text/plain' | 'application/xml' | 'text/html';
 
 export interface RequestBody {
@@ -40,6 +40,7 @@ export interface RequestBody {
   urlencoded: KvItem[];
   rawContent: string;
   rawType: RawType;
+  graphql?: { query: string; variables: string };
 }
 
 export interface TestResult {
