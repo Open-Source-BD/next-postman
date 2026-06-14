@@ -14,13 +14,21 @@ export interface KvItem {
   file?: File | null;
 }
 
-export type AuthType = 'none' | 'bearer' | 'basic';
+export type AuthType = 'none' | 'bearer' | 'basic' | 'apikey' | 'oauth2' | 'jwt';
+
+export type ApiKeyIn = 'header' | 'query';
 
 export interface AuthConfig {
   type: AuthType;
   bearer: string;
   basicUser: string;
   basicPass: string;
+  apiKeyName: string;
+  apiKeyValue: string;
+  apiKeyIn: ApiKeyIn;
+  oauthToken: string;
+  jwtToken: string;
+  jwtPrefix: string;
 }
 
 export type BodyType = 'none' | 'formdata' | 'urlencoded' | 'raw';
@@ -123,9 +131,17 @@ export interface EnvVar {
   type?: KvItemType;
 }
 
+/** A named environment holding a set of variables. */
+export interface Environment {
+  id: string;
+  name: string;
+  vars: EnvVar[];
+}
+
 export interface ExportData {
   collections: Collection[];
-  environments: EnvVar[];
+  environments: Environment[];
+  globals?: EnvVar[];
   version: number;
 }
 

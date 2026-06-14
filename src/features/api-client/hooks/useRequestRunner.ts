@@ -1,6 +1,6 @@
 'use client';
 import { useCallback } from 'react';
-import { selectActiveTab, useApiStore } from '../store/useApiStore';
+import { selectActiveTab, selectActiveVars, useApiStore } from '../store/useApiStore';
 import { PmSandbox } from '../lib/pmSandbox';
 import { sendViaProxy } from '../lib/proxyClient';
 import { resolveEnv } from '../lib/envResolver';
@@ -16,7 +16,8 @@ export function useRequestRunner(): () => Promise<void> {
 
     state.setIsLoading(true);
 
-    const sandbox = new PmSandbox(state.environments, state.setEnvVar);
+    const vars = selectActiveVars(state);
+    const sandbox = new PmSandbox(vars, state.setEnvVar);
 
     try {
       sandbox.runPreRequest(tab.scripts);
@@ -27,13 +28,13 @@ export function useRequestRunner(): () => Promise<void> {
     }
 
     // Persist a protocol back into the visible URL when one is missing.
-    const resolved = resolveEnv(tab.url, state.environments).trim();
+    const resolved = resolveEnv(tab.url, vars).trim();
     if (!/^https?:\/\//i.test(resolved)) {
       state.updateActiveTab({ url: 'http://' + resolved });
     }
 
     try {
-      const { finalUrl, ...resData } = await sendViaProxy(tab, state.environments);
+      const { finalUrl, ...resData } = await sendViaProxy(tab, vars);
 
       sandbox.attachResponse(resData.status, resData.statusText, resData.rawText);
       sandbox.runTests(tab.tests);

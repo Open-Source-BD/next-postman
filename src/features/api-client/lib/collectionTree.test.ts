@@ -20,7 +20,7 @@ const tab = (): TabState => ({
   url: 'https://x',
   params: [],
   headers: [],
-  auth: { type: 'none', bearer: '', basicUser: '', basicPass: '' },
+  auth: { type: 'none', bearer: '', basicUser: '', basicPass: '', apiKeyName: '', apiKeyValue: '', apiKeyIn: 'header', oauthToken: '', jwtToken: '', jwtPrefix: 'Bearer' },
   body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
   scripts: '',
   tests: '',

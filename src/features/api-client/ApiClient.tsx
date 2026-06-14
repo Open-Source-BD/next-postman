@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApiStore } from './store/useApiStore';
 import { usePersistence } from './store/persist';
 import { useRequestRunner } from './hooks/useRequestRunner';
@@ -14,17 +14,23 @@ import { EnvModal } from './components/modals/EnvModal';
 import { SaveModal } from './components/modals/SaveModal';
 import { CodeModal } from './components/modals/CodeModal';
 import { MoveToModal } from './components/modals/MoveToModal';
+import { CurlModal } from './components/modals/CurlModal';
 
 export function ApiClient() {
   usePersistence();
   const hydrated = useApiStore((s) => s.hydrated);
+  const theme = useApiStore((s) => s.theme);
   const send = useRequestRunner();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const triggerImport = () => fileInputRef.current?.click();
   const onExport = () => {
-    const { collections, environments } = useApiStore.getState();
-    exportData(collections, environments);
+    const { collections, environments, globals } = useApiStore.getState();
+    exportData(collections, environments, globals);
   };
 
   useKeyboardShortcuts({ send, triggerImport });
@@ -70,6 +76,7 @@ export function ApiClient() {
       <SaveModal />
       <CodeModal />
       <MoveToModal />
+      <CurlModal />
     </div>
   );
 }

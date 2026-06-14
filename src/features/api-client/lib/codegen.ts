@@ -55,11 +55,23 @@ function buildModel(tab: TabState, environments: EnvVar[]): ReqModel {
   const headers: [string, string][] = tab.headers.filter((h) => h.key).map((h) => [r(h.key), r(h.value)]);
   const hasHeader = (k: string) => headers.some(([hk]) => hk.toLowerCase() === k.toLowerCase());
 
-  if (tab.auth.type === 'bearer' && tab.auth.bearer) {
-    headers.push(['Authorization', `Bearer ${r(tab.auth.bearer)}`]);
-  } else if (tab.auth.type === 'basic' && tab.auth.basicUser) {
-    const token = typeof btoa !== 'undefined' ? btoa(`${r(tab.auth.basicUser)}:${r(tab.auth.basicPass)}`) : '';
+  const auth = tab.auth;
+  if (auth.type === 'bearer' && auth.bearer) {
+    headers.push(['Authorization', `Bearer ${r(auth.bearer)}`]);
+  } else if (auth.type === 'basic' && auth.basicUser) {
+    const token = typeof btoa !== 'undefined' ? btoa(`${r(auth.basicUser)}:${r(auth.basicPass)}`) : '';
     headers.push(['Authorization', `Basic ${token}`]);
+  } else if (auth.type === 'apikey' && auth.apiKeyName) {
+    if (auth.apiKeyIn === 'query') {
+      url += (url.includes('?') ? '&' : '?') + `${enc(r(auth.apiKeyName))}=${enc(r(auth.apiKeyValue))}`;
+    } else {
+      headers.push([r(auth.apiKeyName), r(auth.apiKeyValue)]);
+    }
+  } else if (auth.type === 'oauth2' && auth.oauthToken) {
+    headers.push(['Authorization', `Bearer ${r(auth.oauthToken)}`]);
+  } else if (auth.type === 'jwt' && auth.jwtToken) {
+    const prefix = auth.jwtPrefix?.trim();
+    headers.push(['Authorization', prefix ? `${prefix} ${r(auth.jwtToken)}` : r(auth.jwtToken)]);
   }
 
   let body: string | null = null;

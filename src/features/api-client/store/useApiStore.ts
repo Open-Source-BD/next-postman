@@ -1,8 +1,17 @@
 import { create } from 'zustand';
-import type { Collection, EnvVar, HistoryItem, SidebarTab, TabState } from '../types';
+import type { Collection, EnvVar, Environment, HistoryItem, SidebarTab, TabState } from '../types';
 import type { CodeLang } from '../lib/codegen';
 import { generateId } from '../lib/id';
 import * as tree from '../lib/collectionTree';
+
+/** Accept either the new Environment[] shape or a legacy flat EnvVar[]. */
+function migrateEnvironments(raw: unknown): Environment[] {
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  const first = raw[0] as Record<string, unknown>;
+  if (first && Array.isArray(first.vars)) return raw as Environment[];
+  // Legacy flat EnvVar[] → single "Default" environment.
+  return [{ id: generateId(), name: 'Default', vars: raw as EnvVar[] }];
+}
 
 export function createDefaultTab(): TabState {
   return {
@@ -11,7 +20,18 @@ export function createDefaultTab(): TabState {
     url: '',
     params: [],
     headers: [],
-    auth: { type: 'none', bearer: '', basicUser: '', basicPass: '' },
+    auth: {
+      type: 'none',
+      bearer: '',
+      basicUser: '',
+      basicPass: '',
+      apiKeyName: '',
+      apiKeyValue: '',
+      apiKeyIn: 'header',
+      oauthToken: '',
+      jwtToken: '',
+      jwtPrefix: 'Bearer',
+    },
     body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
     scripts: '',
     tests: '',
@@ -38,13 +58,18 @@ export interface PendingSave {
   fromActiveTab: boolean;
 }
 
+type Theme = 'light' | 'dark';
+
 interface ApiState {
   hydrated: boolean;
+  theme: Theme;
   tabs: TabState[];
   activeTabId: string;
   history: HistoryItem[];
   collections: Collection[];
-  environments: EnvVar[];
+  environments: Environment[];
+  activeEnvId: string | null;
+  globals: EnvVar[];
 
   // UI
   activeSidebarTab: SidebarTab;
@@ -53,6 +78,7 @@ interface ApiState {
   isSaveModalOpen: boolean;
   isCodeModalOpen: boolean;
   isMoveModalOpen: boolean;
+  isCurlModalOpen: boolean;
   moveNodeId: string | null;
   pendingSave: PendingSave | null;
   codeLang: CodeLang;
@@ -95,12 +121,26 @@ interface ApiState {
   cancelSave: () => void;
 
   // Environments
-  setEnvironments: (env: EnvVar[]) => void;
+  createEnvironment: (name: string) => void;
+  renameEnvironment: (id: string, name: string) => void;
+  deleteEnvironment: (id: string) => void;
+  setActiveEnv: (id: string | null) => void;
+  setEnvVars: (envId: string, vars: EnvVar[]) => void;
+  setGlobals: (vars: EnvVar[]) => void;
   setEnvVar: (key: string, value: string) => void;
 
   // Import / hydrate
-  mergeImport: (collections: Collection[], environments: EnvVar[]) => void;
-  hydrate: (data: Partial<Pick<ApiState, 'history' | 'collections' | 'environments'>>) => void;
+  mergeImport: (collections: Collection[], environments: Environment[]) => void;
+  hydrate: (data: {
+    history?: HistoryItem[];
+    collections?: unknown;
+    environments?: unknown;
+    activeEnvId?: string | null;
+    globals?: EnvVar[];
+    tabs?: TabState[];
+    activeTabId?: string;
+    theme?: Theme;
+  }) => void;
 
   // UI setters
   toggleExpanded: (id: string) => void;
@@ -111,22 +151,28 @@ interface ApiState {
   setActiveSidebarTab: (tab: SidebarTab) => void;
   setIsLoading: (v: boolean) => void;
   setEnvModalOpen: (v: boolean) => void;
+  setCurlModalOpen: (v: boolean) => void;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
   setCodeLang: (v: CodeLang) => void;
   setCodeSnippet: (v: string) => void;
   setCopied: (v: boolean) => void;
+  toggleTheme: () => void;
+  setTheme: (t: Theme) => void;
 }
 
 const initialTab = createDefaultTab();
 
 export const useApiStore = create<ApiState>((set, get) => ({
   hydrated: false,
+  theme: 'light',
   tabs: [initialTab],
   activeTabId: initialTab.id,
   history: [],
   collections: [],
   environments: [],
+  activeEnvId: null,
+  globals: [],
 
   activeSidebarTab: 'history',
   isLoading: false,
@@ -134,6 +180,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
   isSaveModalOpen: false,
   isCodeModalOpen: false,
   isMoveModalOpen: false,
+  isCurlModalOpen: false,
   moveNodeId: null,
   pendingSave: null,
   codeLang: 'curl',
@@ -296,12 +343,43 @@ export const useApiStore = create<ApiState>((set, get) => ({
 
   // --- Environments ---
 
-  setEnvironments: (environments) => set({ environments }),
+  createEnvironment: (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const env: Environment = { id: generateId(), name: trimmed, vars: [] };
+    set((s) => ({ environments: [...s.environments, env], activeEnvId: env.id }));
+  },
+
+  renameEnvironment: (id, name) =>
+    set((s) => ({ environments: s.environments.map((e) => (e.id === id ? { ...e, name } : e)) })),
+
+  deleteEnvironment: (id) =>
+    set((s) => ({
+      environments: s.environments.filter((e) => e.id !== id),
+      activeEnvId: s.activeEnvId === id ? null : s.activeEnvId,
+    })),
+
+  setActiveEnv: (activeEnvId) => set({ activeEnvId }),
+
+  setEnvVars: (envId, vars) =>
+    set((s) => ({ environments: s.environments.map((e) => (e.id === envId ? { ...e, vars } : e)) })),
+
+  setGlobals: (globals) => set({ globals }),
+
+  // Used by the pm sandbox — writes to the active env, else globals.
   setEnvVar: (key, value) =>
     set((s) => {
-      const exists = s.environments.find((p) => p.key === key);
-      if (exists) return { environments: s.environments.map((p) => (p.key === key ? { ...p, value } : p)) };
-      return { environments: [...s.environments, { id: generateId(), key, value }] };
+      const upsert = (vars: EnvVar[]) => {
+        const exists = vars.find((p) => p.key === key);
+        return exists
+          ? vars.map((p) => (p.key === key ? { ...p, value } : p))
+          : [...vars, { id: generateId(), key, value }];
+      };
+      const active = s.environments.find((e) => e.id === s.activeEnvId);
+      if (active) {
+        return { environments: s.environments.map((e) => (e.id === active.id ? { ...e, vars: upsert(e.vars) } : e)) };
+      }
+      return { globals: upsert(s.globals) };
     }),
 
   mergeImport: (collections, environments) =>
@@ -317,12 +395,24 @@ export const useApiStore = create<ApiState>((set, get) => ({
 
   hydrate: (data) => {
     const collections = tree.migrateCollections(data.collections ?? []);
+    const environments = migrateEnvironments(data.environments);
     const expanded: Record<string, boolean> = {};
     collections.forEach((c) => { expanded[c.id] = true; });
+
+    const tabs = data.tabs && data.tabs.length ? data.tabs : [createDefaultTab()];
+    const activeTabId = data.activeTabId && tabs.some((t) => t.id === data.activeTabId)
+      ? data.activeTabId
+      : tabs[0].id;
+
     set({
       history: data.history ?? [],
       collections,
-      environments: Array.isArray(data.environments) ? data.environments : [],
+      environments,
+      activeEnvId: data.activeEnvId ?? environments[0]?.id ?? null,
+      globals: Array.isArray(data.globals) ? data.globals : [],
+      tabs,
+      activeTabId,
+      theme: data.theme === 'dark' ? 'dark' : 'light',
       expanded,
       hydrated: true,
     });
@@ -338,13 +428,22 @@ export const useApiStore = create<ApiState>((set, get) => ({
   setActiveSidebarTab: (activeSidebarTab) => set({ activeSidebarTab }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setEnvModalOpen: (isEnvModalOpen) => set({ isEnvModalOpen }),
+  setCurlModalOpen: (isCurlModalOpen) => set({ isCurlModalOpen }),
   setSaveModalOpen: (isSaveModalOpen) => set({ isSaveModalOpen }),
   setCodeModalOpen: (isCodeModalOpen) => set({ isCodeModalOpen }),
   setCodeLang: (codeLang) => set({ codeLang }),
   setCodeSnippet: (codeSnippet) => set({ codeSnippet }),
   setCopied: (copied) => set({ copied }),
+  toggleTheme: () => set((s) => ({ theme: s.theme === 'light' ? 'dark' : 'light' })),
+  setTheme: (theme) => set({ theme }),
 }));
 
 /** Selector helper: the currently active tab (falls back to first). */
 export const selectActiveTab = (s: ApiState): TabState =>
   s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
+
+/** Resolved variable list for the active env: globals first, active env overrides. */
+export const selectActiveVars = (s: ApiState): EnvVar[] => {
+  const active = s.environments.find((e) => e.id === s.activeEnvId);
+  return [...s.globals, ...(active?.vars ?? [])];
+};

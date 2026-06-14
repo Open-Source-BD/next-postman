@@ -1,6 +1,15 @@
-import type { Collection, EnvVar, ExportData } from '../types';
+import type { Collection, EnvVar, Environment, ExportData } from '../types';
 import { migrateCollections } from './collectionTree';
 import { fromPostman, isPostmanCollection, toPostman } from './postmanFormat';
+import { generateId } from './id';
+
+/** Accept either Environment[] or a legacy flat EnvVar[] from imported data. */
+function migrateEnvs(raw: unknown): Environment[] {
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  const first = raw[0] as Record<string, unknown>;
+  if (first && Array.isArray(first.vars)) return raw as Environment[];
+  return [{ id: generateId(), name: 'Imported', vars: raw as EnvVar[] }];
+}
 
 function download(filename: string, content: string): void {
   const blob = new Blob([content], { type: 'application/json' });
@@ -14,9 +23,9 @@ function download(filename: string, content: string): void {
 
 const today = () => new Date().toISOString().split('T')[0];
 
-/** App-native JSON export of all collections + environments. */
-export function exportData(collections: Collection[], environments: EnvVar[]): void {
-  const data: ExportData = { collections, environments, version: 2 };
+/** App-native JSON export of all collections + environments + globals. */
+export function exportData(collections: Collection[], environments: Environment[], globals: EnvVar[] = []): void {
+  const data: ExportData = { collections, environments, globals, version: 2 };
   download(`postman-clone-export-${today()}.json`, JSON.stringify(data, null, 2));
 }
 
@@ -28,7 +37,7 @@ export function exportPostman(collection: Collection): void {
 
 export interface ParsedImport {
   collections: Collection[];
-  environments: EnvVar[];
+  environments: Environment[];
 }
 
 /**
@@ -50,7 +59,7 @@ export function parseImportFile(file: File): Promise<ParsedImport> {
         const data = json as Partial<ExportData>;
         resolve({
           collections: migrateCollections(data.collections ?? []),
-          environments: Array.isArray(data.environments) ? data.environments : [],
+          environments: migrateEnvs(data.environments),
         });
       } catch {
         reject(new Error('Invalid JSON file.'));

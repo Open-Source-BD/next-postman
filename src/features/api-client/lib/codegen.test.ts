@@ -8,7 +8,7 @@ const baseTab: TabState = {
   url: 'https://{{host}}/users',
   params: [],
   headers: [{ id: 'h1', key: 'X-Custom', value: '{{ver}}' }],
-  auth: { type: 'bearer', bearer: '{{token}}', basicUser: '', basicPass: '' },
+  auth: { type: 'bearer', bearer: '{{token}}', basicUser: '', basicPass: '', apiKeyName: '', apiKeyValue: '', apiKeyIn: 'header', oauthToken: '', jwtToken: '', jwtPrefix: 'Bearer' },
   body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
   scripts: '',
   tests: '',
@@ -64,5 +64,20 @@ describe('generateCode (other languages)', () => {
   it('appends query params to the url', () => {
     const tabWithQuery = { ...baseTab, params: [{ id: 'p', key: 'q', value: 'hi there' }] };
     expect(generateCode(tabWithQuery, env, 'curl')).toContain('q=hi%20there');
+  });
+
+  it('API key in header', () => {
+    const t = { ...baseTab, auth: { ...baseTab.auth, type: 'apikey' as const, apiKeyName: 'X-Api-Key', apiKeyValue: 'secret', apiKeyIn: 'header' as const } };
+    expect(generateCode(t, env, 'curl')).toContain("-H 'X-Api-Key: secret'");
+  });
+
+  it('API key in query', () => {
+    const t = { ...baseTab, auth: { ...baseTab.auth, type: 'apikey' as const, apiKeyName: 'api_key', apiKeyValue: 'k1', apiKeyIn: 'query' as const } };
+    expect(generateCode(t, env, 'curl')).toContain('api_key=k1');
+  });
+
+  it('JWT with custom prefix', () => {
+    const t = { ...baseTab, auth: { ...baseTab.auth, type: 'jwt' as const, jwtToken: 'eyJ', jwtPrefix: 'Token' } };
+    expect(generateCode(t, env, 'curl')).toContain("-H 'Authorization: Token eyJ'");
   });
 });

@@ -41,10 +41,19 @@ export async function sendViaProxy(
     if (h.key) fetchHeaders.append(r(h.key), r(h.value));
   });
 
-  if (tab.auth.type === 'bearer' && tab.auth.bearer) {
-    fetchHeaders.set('Authorization', `Bearer ${r(tab.auth.bearer)}`);
-  } else if (tab.auth.type === 'basic' && tab.auth.basicUser) {
-    fetchHeaders.set('Authorization', `Basic ${btoa(r(tab.auth.basicUser) + ':' + r(tab.auth.basicPass))}`);
+  const auth = tab.auth;
+  if (auth.type === 'bearer' && auth.bearer) {
+    fetchHeaders.set('Authorization', `Bearer ${r(auth.bearer)}`);
+  } else if (auth.type === 'basic' && auth.basicUser) {
+    fetchHeaders.set('Authorization', `Basic ${btoa(r(auth.basicUser) + ':' + r(auth.basicPass))}`);
+  } else if (auth.type === 'apikey' && auth.apiKeyName) {
+    if (auth.apiKeyIn === 'query') url.searchParams.append(r(auth.apiKeyName), r(auth.apiKeyValue));
+    else fetchHeaders.set(r(auth.apiKeyName), r(auth.apiKeyValue));
+  } else if (auth.type === 'oauth2' && auth.oauthToken) {
+    fetchHeaders.set('Authorization', `Bearer ${r(auth.oauthToken)}`);
+  } else if (auth.type === 'jwt' && auth.jwtToken) {
+    const prefix = auth.jwtPrefix?.trim();
+    fetchHeaders.set('Authorization', prefix ? `${prefix} ${r(auth.jwtToken)}` : r(auth.jwtToken));
   }
 
   let fetchBody: BodyInit | undefined;
