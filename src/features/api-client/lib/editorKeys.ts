@@ -11,11 +11,19 @@ export interface EditAction {
 const PAIRS: Record<string, string> = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '`': '`' };
 const OVERTYPE = new Set([')', ']', '}', '"', "'", '`']);
 
+// HTML void elements — never get a closing tag.
+const VOID_TAGS = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+
+export type EditorLang = 'json' | 'js' | 'xml' | 'html' | 'text';
+
 interface KeyCtx {
   key: string;
   value: string;
   selStart: number;
   selEnd: number;
+  lang?: EditorLang;
 }
 
 const indentOf = (value: string, pos: number): string => {
@@ -27,17 +35,34 @@ const indentOf = (value: string, pos: number): string => {
  * Compute a code-editor edit for a keypress (auto-pairing, overtype, smart
  * Enter, Tab). Returns null to let the default textarea behavior happen.
  */
-export function computeEdit({ key, value, selStart, selEnd }: KeyCtx): EditAction | null {
+export function computeEdit({ key, value, selStart, selEnd, lang = 'js' }: KeyCtx): EditAction | null {
   const collapsed = selStart === selEnd;
   const next = value[selStart];
+  const pairing = lang !== 'text';
+
+  // HTML/XML: typing '>' to finish an opening tag inserts the matching close tag.
+  if ((lang === 'html' || lang === 'xml') && key === '>') {
+    const lt = value.lastIndexOf('<', selStart - 1);
+    if (lt !== -1) {
+      const seg = value.slice(lt, selStart);
+      const m = seg.match(/^<([a-zA-Z][\w:-]*)([^<>]*)$/);
+      if (m && !seg.endsWith('/') && !seg.startsWith('</')) {
+        const tag = m[1];
+        const isVoid = lang === 'html' && VOID_TAGS.has(tag.toLowerCase());
+        if (!isVoid) {
+          return { start: selStart, end: selEnd, text: `></${tag}>`, cursorStart: selStart + 1, cursorEnd: selStart + 1 };
+        }
+      }
+    }
+  }
 
   // Overtype: typing a closer/quote when it's already the next char.
-  if (collapsed && OVERTYPE.has(key) && next === key) {
+  if (pairing && collapsed && OVERTYPE.has(key) && next === key) {
     return { start: selStart, end: selStart, text: '', cursorStart: selStart + 1, cursorEnd: selStart + 1 };
   }
 
   // Open a pair (or wrap the selection).
-  if (PAIRS[key]) {
+  if (pairing && PAIRS[key]) {
     const close = PAIRS[key];
     if (!collapsed) {
       const sel = value.slice(selStart, selEnd);
@@ -53,7 +78,7 @@ export function computeEdit({ key, value, selStart, selEnd }: KeyCtx): EditActio
   }
 
   // Backspace inside an empty pair deletes both.
-  if (key === 'Backspace' && collapsed && selStart > 0) {
+  if (pairing && key === 'Backspace' && collapsed && selStart > 0) {
     const before = value[selStart - 1];
     if (PAIRS[before] && PAIRS[before] === value[selStart]) {
       return { start: selStart - 1, end: selStart + 1, text: '', cursorStart: selStart - 1, cursorEnd: selStart - 1 };

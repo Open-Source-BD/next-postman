@@ -54,3 +54,39 @@ describe('computeEdit', () => {
     expect(at('', 0, 'a')).toBeNull();
   });
 });
+
+describe('computeEdit — HTML/XML tags', () => {
+  const tag = (value: string, pos: number, lang: 'html' | 'xml') =>
+    computeEdit({ key: '>', value, selStart: pos, selEnd: pos, lang });
+
+  it('auto-closes an opening tag', () => {
+    const a = tag('<div', 4, 'html');
+    expect(a).toMatchObject({ text: '></div>', cursorStart: 5, cursorEnd: 5 });
+  });
+
+  it('handles attributes', () => {
+    expect(tag('<a href="x"', 11, 'html')?.text).toBe('></a>');
+  });
+
+  it('skips void elements in html', () => {
+    expect(tag('<br', 3, 'html')).toBeNull();
+  });
+
+  it('xml closes any tag (no void list)', () => {
+    expect(tag('<br', 3, 'xml')?.text).toBe('></br>');
+  });
+
+  it('skips self-closing and closing tags', () => {
+    expect(tag('<img/', 5, 'html')).toBeNull();
+    expect(tag('</div', 5, 'html')).toBeNull();
+  });
+});
+
+describe('computeEdit — plain text disables pairing', () => {
+  it('does not auto-pair in text mode', () => {
+    expect(computeEdit({ key: '{', value: '', selStart: 0, selEnd: 0, lang: 'text' })).toBeNull();
+  });
+  it('still auto-pairs in json mode', () => {
+    expect(computeEdit({ key: '{', value: '', selStart: 0, selEnd: 0, lang: 'json' })?.text).toBe('{}');
+  });
+});
