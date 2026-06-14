@@ -5,6 +5,7 @@ import { formatSize } from '../lib/format';
 import { syntaxHighlight } from '../lib/syntaxHighlight';
 import { generateTypes, TYPE_LANGS, type TypeLang } from '../lib/jsonToTypes';
 import { CodeView } from './CodeView';
+import { JsonTree } from './JsonTree';
 
 export function ResponsePane() {
   const tab = useApiStore(selectActiveTab);
@@ -95,7 +96,7 @@ export function ResponsePane() {
         {res && (
           <>
             <div className={`md-tab-content ${tab.activeResTab === 'body' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
-              <CodeView text={prettyText} html={bodyHtml} />
+              {isJson ? <JsonTree data={parsed} rawText={prettyText} /> : <CodeView text={prettyText} html={bodyHtml} />}
             </div>
 
             <div className={`md-tab-content ${tab.activeResTab === 'headers' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>

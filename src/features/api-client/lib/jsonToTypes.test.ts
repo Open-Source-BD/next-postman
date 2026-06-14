@@ -42,4 +42,39 @@ describe('generateTypes', () => {
   it('non-object returns a comment', () => {
     expect(generateTypes(42, 'typescript')).toContain('not a JSON object');
   });
+
+  it('Dart (Flutter): class with fromJson/toJson', () => {
+    const out = generateTypes(sample, 'dart');
+    expect(out).toContain('class Root {');
+    expect(out).toContain('factory Root.fromJson(Map<String, dynamic> json)');
+    expect(out).toContain("userId: json['userId'] as int,");
+    expect(out).toContain('Map<String, dynamic> toJson()');
+  });
+
+  it('Dart: nested object + list use recursive fromJson', () => {
+    const out = generateTypes(nested, 'dart');
+    expect(out).toContain("owner: Owner.fromJson(json['owner'] as Map<String, dynamic>)");
+    expect(out).toContain("tags: (json['tags'] as List).cast<String>()");
+  });
+
+  it('Kotlin: data class', () => {
+    expect(generateTypes(sample, 'kotlin')).toContain('data class Root(');
+  });
+
+  it('Swift: Codable struct', () => {
+    expect(generateTypes(sample, 'swift')).toContain('struct Root: Codable {');
+  });
+
+  it('Java: class with List import', () => {
+    const out = generateTypes(nested, 'java');
+    expect(out).toContain('import java.util.List;');
+    expect(out).toContain('public class Root {');
+  });
+
+  it('C#: class with JsonPropertyName', () => {
+    const out = generateTypes(sample, 'csharp');
+    expect(out).toContain('public class Root');
+    expect(out).toContain('[JsonPropertyName("userId")]');
+    expect(out).toContain('public int UserId { get; set; }');
+  });
 });
