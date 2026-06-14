@@ -1,0 +1,71 @@
+'use client';
+import type { HttpMethod } from '../types';
+import { selectActiveTab, useApiStore } from '../store/useApiStore';
+import { generateCode } from '../lib/codegen';
+
+const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+
+interface UrlBarProps {
+  send: () => void;
+}
+
+export function UrlBar({ send }: UrlBarProps) {
+  const tab = useApiStore(selectActiveTab);
+  const isLoading = useApiStore((s) => s.isLoading);
+  const environments = useApiStore((s) => s.environments);
+  const updateActiveTab = useApiStore((s) => s.updateActiveTab);
+  const setSaveReqName = useApiStore((s) => s.setSaveReqName);
+  const setSaveModalOpen = useApiStore((s) => s.setSaveModalOpen);
+  const setCodeSnippet = useApiStore((s) => s.setCodeSnippet);
+  const setCodeModalOpen = useApiStore((s) => s.setCodeModalOpen);
+
+  const openCode = () => {
+    setCodeSnippet(generateCode(tab, environments));
+    setCodeModalOpen(true);
+  };
+
+  return (
+    <div className="url-bar-container">
+      <select
+        className="md-select method-select"
+        value={tab.method}
+        onChange={(e) => updateActiveTab({ method: e.target.value as HttpMethod })}
+      >
+        {METHODS.map((m) => (
+          <option key={m} value={m}>
+            {m}
+          </option>
+        ))}
+      </select>
+      <input
+        className="md-input url-input"
+        value={tab.url}
+        onChange={(e) => updateActiveTab({ url: e.target.value })}
+        placeholder="https://api.example.com/v1/users/{{userId}}"
+        spellCheck="false"
+      />
+      <button
+        className="md-filled-btn send-btn"
+        onClick={send}
+        disabled={isLoading}
+        title="Send Request (Cmd+Enter)"
+      >
+        <span className="material-symbols-outlined">{isLoading ? 'hourglass_empty' : 'send'}</span>{' '}
+        {isLoading ? 'Sending' : 'Send'}
+      </button>
+      <button
+        className="md-tonal-btn save-btn"
+        onClick={() => {
+          setSaveReqName('');
+          setSaveModalOpen(true);
+        }}
+        title="Save Request (Cmd+S)"
+      >
+        <span className="material-symbols-outlined">save</span> Save
+      </button>
+      <button className="md-tonal-btn save-btn" onClick={openCode} title="Generate Code">
+        <span className="material-symbols-outlined">code</span> Code
+      </button>
+    </div>
+  );
+}

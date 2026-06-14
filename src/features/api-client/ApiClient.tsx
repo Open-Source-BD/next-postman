@@ -1,0 +1,73 @@
+'use client';
+import { useRef } from 'react';
+import { useApiStore } from './store/useApiStore';
+import { usePersistence } from './store/persist';
+import { useRequestRunner } from './hooks/useRequestRunner';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { exportData, parseImportFile } from './lib/importExport';
+import { Sidebar } from './components/Sidebar';
+import { TopBar } from './components/TopBar';
+import { RequestTabsBar } from './components/RequestTabsBar';
+import { RequestPane } from './components/RequestPane';
+import { ResponsePane } from './components/ResponsePane';
+import { EnvModal } from './components/modals/EnvModal';
+import { SaveModal } from './components/modals/SaveModal';
+import { CodeModal } from './components/modals/CodeModal';
+
+export function ApiClient() {
+  usePersistence();
+  const hydrated = useApiStore((s) => s.hydrated);
+  const send = useRequestRunner();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerImport = () => fileInputRef.current?.click();
+  const onExport = () => {
+    const { collections, environments } = useApiStore.getState();
+    exportData(collections, environments);
+  };
+
+  useKeyboardShortcuts({ send, triggerImport });
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { collections, environments } = await parseImportFile(file);
+      useApiStore.getState().mergeImport(collections, environments);
+      alert('Import successful!');
+    } catch {
+      alert('Invalid JSON file.');
+    }
+    e.target.value = '';
+  };
+
+  // Match the prior SSR-safe mount guard: render nothing meaningful until
+  // localStorage has hydrated to avoid a hydration mismatch.
+  if (!hydrated) {
+    return <div style={{ height: '100vh', background: 'var(--md-sys-color-background)' }} />;
+  }
+
+  return (
+    <div id="app">
+      <Sidebar triggerImport={triggerImport} onExport={onExport} />
+      <main className="main-area">
+        <TopBar />
+        <RequestTabsBar />
+        <RequestPane send={send} />
+        <ResponsePane />
+      </main>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleImport}
+      />
+
+      <EnvModal />
+      <SaveModal />
+      <CodeModal />
+    </div>
+  );
+}
