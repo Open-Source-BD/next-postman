@@ -767,9 +767,15 @@ body {
 
 .response-content {
   flex: 1;
-  overflow: auto;
+  min-height: 0;
+  overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
+/* Response sub-tabs fill the pane (override the 300px cap meant for request tabs). */
+.response-content > .md-tab-content { max-height: none; }
+.response-content > .md-tab-content.active { flex: 1; min-height: 0; }
 .response-pre {
   margin: 0;
   padding: 16px;
