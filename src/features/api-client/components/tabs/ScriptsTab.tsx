@@ -1,5 +1,6 @@
 'use client';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
+import { CodeTextarea } from '../CodeTextarea';
 
 export function ScriptsTab() {
   const tab = useApiStore(selectActiveTab);
@@ -9,11 +10,11 @@ export function ScriptsTab() {
       <div style={{ color: 'var(--md-sys-color-on-surface-variant)', fontSize: '13px', marginBottom: '8px' }}>
         Write JavaScript to execute before the request. Ex: <code>pm.environment.set(&quot;key&quot;, &quot;value&quot;)</code>
       </div>
-      <textarea
+      <CodeTextarea
         className="md-textarea body-textarea"
         value={tab.scripts}
-        onChange={(e) => updateActiveTab({ scripts: e.target.value })}
-        spellCheck="false"
+        onChange={(scripts) => updateActiveTab({ scripts })}
+        spellCheck={false}
       />
     </>
   );

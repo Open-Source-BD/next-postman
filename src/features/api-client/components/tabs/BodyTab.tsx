@@ -2,6 +2,7 @@
 import type { BodyType, RawType } from '../../types';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
 import { KvEditor } from '../KvEditor';
+import { CodeTextarea } from '../CodeTextarea';
 
 const BODY_TYPES: BodyType[] = ['none', 'formdata', 'urlencoded', 'raw'];
 
@@ -59,11 +60,11 @@ export function BodyTab() {
         />
       )}
       {body.type === 'raw' && (
-        <textarea
+        <CodeTextarea
           className="md-textarea body-textarea"
           value={body.rawContent}
-          onChange={(e) => updateActiveTab({ body: { ...body, rawContent: e.target.value } })}
-          spellCheck="false"
+          onChange={(rawContent) => updateActiveTab({ body: { ...body, rawContent } })}
+          spellCheck={false}
           placeholder="Enter request body here..."
         />
       )}

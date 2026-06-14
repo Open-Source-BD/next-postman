@@ -1,5 +1,6 @@
 'use client';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
+import { CodeTextarea } from '../CodeTextarea';
 
 export function TestsTab() {
   const tab = useApiStore(selectActiveTab);
@@ -9,11 +10,11 @@ export function TestsTab() {
       <div style={{ color: 'var(--md-sys-color-on-surface-variant)', fontSize: '13px', marginBottom: '8px' }}>
         Write JavaScript to execute after the request. Ex: <code>{'if(pm.response.code === 200) { ... }'}</code>
       </div>
-      <textarea
+      <CodeTextarea
         className="md-textarea body-textarea"
         value={tab.tests}
-        onChange={(e) => updateActiveTab({ tests: e.target.value })}
-        spellCheck="false"
+        onChange={(tests) => updateActiveTab({ tests })}
+        spellCheck={false}
       />
     </>
   );
