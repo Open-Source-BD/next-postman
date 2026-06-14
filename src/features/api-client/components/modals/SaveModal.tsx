@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { PendingSave } from '../../store/useApiStore';
 import { useApiStore } from '../../store/useApiStore';
+import { listContainers } from '../../lib/collectionTree';
 import { TreePicker } from '../collections/TreePicker';
 
 export function SaveModal() {
@@ -15,10 +16,12 @@ function SaveModalInner({ pending }: { pending: PendingSave }) {
   const confirmSave = useApiStore((s) => s.confirmSave);
   const cancelSave = useApiStore((s) => s.cancelSave);
   const createCollection = useApiStore((s) => s.createCollection);
+  const createFolder = useApiStore((s) => s.createFolder);
 
   const [name, setName] = useState(pending.suggestedName);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newCol, setNewCol] = useState('');
+  const [newFolder, setNewFolder] = useState('');
 
   const addCollection = () => {
     const trimmed = newCol.trim();
@@ -27,6 +30,16 @@ function SaveModalInner({ pending }: { pending: PendingSave }) {
     const cols = useApiStore.getState().collections;
     setSelectedId(cols[cols.length - 1].id);
     setNewCol('');
+  };
+
+  const addFolder = () => {
+    const trimmed = newFolder.trim();
+    if (!trimmed || !selectedId) return;
+    const before = new Set(listContainers(useApiStore.getState().collections).map((c) => c.id));
+    createFolder(selectedId, trimmed);
+    const added = listContainers(useApiStore.getState().collections).find((c) => !before.has(c.id));
+    if (added) setSelectedId(added.id);
+    setNewFolder('');
   };
 
   const canSave = name.trim().length > 0 && selectedId !== null;
@@ -65,6 +78,21 @@ function SaveModalInner({ pending }: { pending: PendingSave }) {
             />
             <button className="md-tonal-btn" onClick={addCollection} disabled={!newCol.trim()}>
               <span className="material-symbols-outlined">add</span> Create
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+            <input
+              className="md-input"
+              placeholder={selectedId ? 'New folder name' : 'Select a target first'}
+              value={newFolder}
+              onChange={(e) => setNewFolder(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') addFolder(); }}
+              disabled={!selectedId}
+              style={{ flex: 1 }}
+            />
+            <button className="md-tonal-btn" onClick={addFolder} disabled={!selectedId || !newFolder.trim()}>
+              <span className="material-symbols-outlined">create_new_folder</span> Folder
             </button>
           </div>
 

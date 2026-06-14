@@ -48,12 +48,13 @@ export function UrlBar({ send }: UrlBarProps) {
         <span className="material-symbols-outlined">{isLoading ? 'hourglass_empty' : 'send'}</span>{' '}
         {isLoading ? 'Sending' : 'Send'}
       </button>
-      <button className="md-tonal-btn save-btn" onClick={saveActiveRequest} title="Save Request (Cmd+S)">
-        <span className="material-symbols-outlined">save</span> Save
-      </button>
-      {isSaved && (
+      {isSaved ? (
         <button className="md-tonal-btn save-btn" onClick={saveActiveRequestAs} title="Save As new request">
           <span className="material-symbols-outlined">save_as</span> Save As
+        </button>
+      ) : (
+        <button className="md-tonal-btn save-btn" onClick={saveActiveRequest} title="Save Request (Cmd+S)">
+          <span className="material-symbols-outlined">save</span> Save
         </button>
       )}
       <button className="md-tonal-btn save-btn" onClick={openCode} title="Generate Code">
