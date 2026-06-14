@@ -1,7 +1,7 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS';
 
 export type RequestSubTab = 'params' | 'auth' | 'headers' | 'body' | 'scripts' | 'tests';
-export type ResponseSubTab = 'body' | 'headers' | 'testresults';
+export type ResponseSubTab = 'body' | 'headers' | 'types' | 'testresults';
 export type SidebarTab = 'history' | 'collections';
 
 export type KvItemType = 'text' | 'file';
