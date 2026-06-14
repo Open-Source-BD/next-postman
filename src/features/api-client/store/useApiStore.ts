@@ -174,7 +174,10 @@ export const useApiStore = create<ApiState>((set, get) => ({
       tabs: s.tabs.map((t) => (t.id === s.activeTabId ? { ...t, ...updates } : t)),
     })),
 
-  addHistory: (item) => set((s) => ({ history: [item, ...s.history].slice(0, 50) })),
+  addHistory: (item) =>
+    set((s) => ({
+      history: [item, ...s.history.filter((h) => !(h.method === item.method && h.url === item.url))].slice(0, 50),
+    })),
   deleteHistoryItem: (id) => set((s) => ({ history: s.history.filter((h) => h.id !== id) })),
   clearHistory: () => set({ history: [] }),
   replayHistory: (item) => {
