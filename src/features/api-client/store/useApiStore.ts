@@ -233,6 +233,12 @@ export const useApiStore = create<ApiState>((set, get) => ({
     })),
 
   openRequestNode: (nodeId) => {
+    // Already open? Focus that tab instead of creating a duplicate.
+    const existing = get().tabs.find((t) => t.sourceNodeId === nodeId);
+    if (existing) {
+      set({ activeTabId: existing.id });
+      return;
+    }
     const node = tree.findNode(get().collections, nodeId);
     if (!node || node.type !== 'request') return;
     get().newTab(node.request);
