@@ -87,7 +87,7 @@ export function CollectionsPanel() {
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
         <div className="tree-scroll">
           {visible.length === 0 && (
-            <div className="empty-state" style={{ padding: '24px 12px' }}>
+            <div className="sidebar-empty">
               <span className="material-symbols-outlined" style={{ fontSize: '36px', opacity: 0.5 }}>folder_open</span>
               <span>No collections. Create one to save requests.</span>
             </div>
