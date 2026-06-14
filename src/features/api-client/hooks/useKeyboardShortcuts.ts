@@ -25,8 +25,7 @@ export function useKeyboardShortcuts({ send, triggerImport }: Options): void {
         send();
       } else if (key === 's') {
         e.preventDefault();
-        s.setSaveReqName('');
-        s.setSaveModalOpen(true);
+        s.saveActiveRequest();
       } else if (key === 't') {
         e.preventDefault();
         s.newTab();

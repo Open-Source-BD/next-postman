@@ -13,6 +13,7 @@ import { ResponsePane } from './components/ResponsePane';
 import { EnvModal } from './components/modals/EnvModal';
 import { SaveModal } from './components/modals/SaveModal';
 import { CodeModal } from './components/modals/CodeModal';
+import { MoveToModal } from './components/modals/MoveToModal';
 
 export function ApiClient() {
   usePersistence();
@@ -68,6 +69,7 @@ export function ApiClient() {
       <EnvModal />
       <SaveModal />
       <CodeModal />
+      <MoveToModal />
     </div>
   );
 }

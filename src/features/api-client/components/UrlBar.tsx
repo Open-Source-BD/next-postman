@@ -14,8 +14,9 @@ export function UrlBar({ send }: UrlBarProps) {
   const isLoading = useApiStore((s) => s.isLoading);
   const environments = useApiStore((s) => s.environments);
   const updateActiveTab = useApiStore((s) => s.updateActiveTab);
-  const setSaveReqName = useApiStore((s) => s.setSaveReqName);
-  const setSaveModalOpen = useApiStore((s) => s.setSaveModalOpen);
+  const saveActiveRequest = useApiStore((s) => s.saveActiveRequest);
+  const saveActiveRequestAs = useApiStore((s) => s.saveActiveRequestAs);
+  const isSaved = useApiStore((s) => !!selectActiveTab(s).sourceNodeId);
   const setCodeSnippet = useApiStore((s) => s.setCodeSnippet);
   const setCodeModalOpen = useApiStore((s) => s.setCodeModalOpen);
 
@@ -53,16 +54,14 @@ export function UrlBar({ send }: UrlBarProps) {
         <span className="material-symbols-outlined">{isLoading ? 'hourglass_empty' : 'send'}</span>{' '}
         {isLoading ? 'Sending' : 'Send'}
       </button>
-      <button
-        className="md-tonal-btn save-btn"
-        onClick={() => {
-          setSaveReqName('');
-          setSaveModalOpen(true);
-        }}
-        title="Save Request (Cmd+S)"
-      >
+      <button className="md-tonal-btn save-btn" onClick={saveActiveRequest} title="Save Request (Cmd+S)">
         <span className="material-symbols-outlined">save</span> Save
       </button>
+      {isSaved && (
+        <button className="md-tonal-btn save-btn" onClick={saveActiveRequestAs} title="Save As new request">
+          <span className="material-symbols-outlined">save_as</span> Save As
+        </button>
+      )}
       <button className="md-tonal-btn save-btn" onClick={openCode} title="Generate Code">
         <span className="material-symbols-outlined">code</span> Code
       </button>

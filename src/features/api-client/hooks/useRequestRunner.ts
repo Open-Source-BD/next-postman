@@ -5,6 +5,7 @@ import { PmSandbox } from '../lib/pmSandbox';
 import { sendViaProxy } from '../lib/proxyClient';
 import { resolveEnv } from '../lib/envResolver';
 import { generateId } from '../lib/id';
+import type { TabState } from '../types';
 
 /** Returns a `send` callback that runs scripts, sends via proxy, records history. */
 export function useRequestRunner(): () => Promise<void> {
@@ -41,6 +42,7 @@ export function useRequestRunner(): () => Promise<void> {
         response: { ...resData, testResults: sandbox.testResults },
         activeResTab: 'body',
       });
+      const snapshot: TabState = { ...JSON.parse(JSON.stringify(tab)), response: null, sourceNodeId: undefined };
       state.addHistory({
         id: generateId(),
         method: tab.method,
@@ -48,6 +50,7 @@ export function useRequestRunner(): () => Promise<void> {
         status: resData.status,
         time: resData.timeTaken,
         date: new Date().toISOString(),
+        request: snapshot,
       });
     } catch (error) {
       state.updateActiveTab({
