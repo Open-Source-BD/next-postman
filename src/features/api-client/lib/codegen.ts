@@ -88,6 +88,12 @@ function buildModel(tab: TabState, environments: EnvVar[]): ReqModel {
         .map((f) => `${enc(r(f.key))}=${f.type === 'file' ? '<file>' : enc(r(f.value))}`)
         .join('&');
       if (!hasHeader('content-type')) headers.push(['Content-Type', 'application/x-www-form-urlencoded']);
+    } else if (tab.body.type === 'graphql') {
+      const g = tab.body.graphql ?? { query: '', variables: '' };
+      let vars: unknown = {};
+      try { vars = g.variables.trim() ? JSON.parse(g.variables) : {}; } catch { vars = {}; }
+      body = JSON.stringify({ query: r(g.query), variables: vars });
+      if (!hasHeader('content-type')) headers.push(['Content-Type', 'application/json']);
     }
   }
 

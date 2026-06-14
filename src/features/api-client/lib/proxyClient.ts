@@ -79,6 +79,12 @@ export async function sendViaProxy(
       if (!fetchHeaders.has('Content-Type')) {
         fetchHeaders.set('Content-Type', 'application/x-www-form-urlencoded');
       }
+    } else if (tab.body.type === 'graphql') {
+      const g = tab.body.graphql ?? { query: '', variables: '' };
+      let vars: unknown = {};
+      try { vars = g.variables.trim() ? JSON.parse(g.variables) : {}; } catch { vars = {}; }
+      fetchBody = JSON.stringify({ query: r(g.query), variables: vars });
+      if (!fetchHeaders.has('Content-Type')) fetchHeaders.set('Content-Type', 'application/json');
     }
   }
 

@@ -4,6 +4,7 @@ import { selectActiveTab, useApiStore } from '../../store/useApiStore';
 import { KvEditor } from '../KvEditor';
 import { CodeTextarea } from '../CodeTextarea';
 import type { EditorLang } from '../../lib/editorKeys';
+import { beautify } from '../../lib/format';
 
 const RAW_LANG: Record<RawType, EditorLang> = {
   'application/json': 'json',
@@ -12,7 +13,7 @@ const RAW_LANG: Record<RawType, EditorLang> = {
   'text/plain': 'text',
 };
 
-const BODY_TYPES: BodyType[] = ['none', 'formdata', 'urlencoded', 'raw'];
+const BODY_TYPES: BodyType[] = ['none', 'formdata', 'urlencoded', 'raw', 'graphql'];
 
 export function BodyTab() {
   const tab = useApiStore(selectActiveTab);
@@ -68,14 +69,49 @@ export function BodyTab() {
         />
       )}
       {body.type === 'raw' && (
-        <CodeTextarea
-          className="md-textarea body-textarea"
-          language={RAW_LANG[body.rawType]}
-          value={body.rawContent}
-          onChange={(rawContent) => updateActiveTab({ body: { ...body, rawContent } })}
-          spellCheck={false}
-          placeholder="Enter request body here..."
-        />
+        <>
+          {(body.rawType === 'application/json' || body.rawType === 'application/xml' || body.rawType === 'text/html') && (
+            <div style={{ marginBottom: '8px' }}>
+              <button
+                className="md-text-btn"
+                onClick={() => updateActiveTab({ body: { ...body, rawContent: beautify(body.rawContent, body.rawType) } })}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>auto_fix_high</span> Beautify
+              </button>
+            </div>
+          )}
+          <CodeTextarea
+            className="md-textarea body-textarea"
+            language={RAW_LANG[body.rawType]}
+            value={body.rawContent}
+            onChange={(rawContent) => updateActiveTab({ body: { ...body, rawContent } })}
+            spellCheck={false}
+            placeholder="Enter request body here..."
+          />
+        </>
+      )}
+      {body.type === 'graphql' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <label className="modal-label">Query</label>
+          <CodeTextarea
+            className="md-textarea body-textarea"
+            language="js"
+            value={body.graphql?.query ?? ''}
+            onChange={(query) => updateActiveTab({ body: { ...body, graphql: { query, variables: body.graphql?.variables ?? '' } } })}
+            spellCheck={false}
+            placeholder="query { ... }"
+          />
+          <label className="modal-label">Variables (JSON)</label>
+          <CodeTextarea
+            className="md-textarea body-textarea"
+            language="json"
+            value={body.graphql?.variables ?? ''}
+            onChange={(variables) => updateActiveTab({ body: { ...body, graphql: { query: body.graphql?.query ?? '', variables } } })}
+            spellCheck={false}
+            placeholder='{ "id": 1 }'
+            style={{ minHeight: '100px' }}
+          />
+        </div>
       )}
     </>
   );

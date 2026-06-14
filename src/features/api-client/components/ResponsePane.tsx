@@ -4,6 +4,7 @@ import { selectActiveTab, useApiStore } from '../store/useApiStore';
 import { formatSize } from '../lib/format';
 import { syntaxHighlight } from '../lib/syntaxHighlight';
 import { generateTypes, TYPE_LANGS, type TypeLang } from '../lib/jsonToTypes';
+import { parseSetCookie } from '../lib/cookies';
 import { CodeView } from './CodeView';
 import { JsonTree } from './JsonTree';
 
@@ -12,6 +13,21 @@ export function ResponsePane() {
   const updateActiveTab = useApiStore((s) => s.updateActiveTab);
   const res = tab.response;
   const [typeLang, setTypeLang] = useState<TypeLang>('typescript');
+  const [bodyView, setBodyView] = useState<'pretty' | 'raw'>('pretty');
+  const [bodySearch, setBodySearch] = useState('');
+
+  const cookies = useMemo(() => parseSetCookie(res?.headers['set-cookie']), [res]);
+
+  const downloadBody = () => {
+    if (!res) return;
+    const blob = new Blob([res.rawText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `response.${isJson ? 'json' : 'txt'}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const parsed = useMemo<unknown>(() => {
     if (!res) return undefined;
@@ -73,6 +89,14 @@ export function ResponsePane() {
             Types
           </button>
         )}
+        {cookies.length > 0 && (
+          <button
+            className={`md-tab-btn ${tab.activeResTab === 'cookies' ? 'active' : ''}`}
+            onClick={() => updateActiveTab({ activeResTab: 'cookies' })}
+          >
+            Cookies ({cookies.length})
+          </button>
+        )}
         {res?.testResults && res.testResults.length > 0 && (
           <button
             className={`md-tab-btn ${tab.activeResTab === 'testresults' ? 'active' : ''}`}
@@ -96,7 +120,34 @@ export function ResponsePane() {
         {res && (
           <>
             <div className={`md-tab-content ${tab.activeResTab === 'body' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
-              {isJson ? <JsonTree data={parsed} rawText={prettyText} /> : <CodeView text={prettyText} html={bodyHtml} />}
+              <div className="types-bar">
+                {isJson && (
+                  <>
+                    <button className={`types-lang-btn ${bodyView === 'pretty' ? 'active' : ''}`} onClick={() => setBodyView('pretty')}>Pretty</button>
+                    <button className={`types-lang-btn ${bodyView === 'raw' ? 'active' : ''}`} onClick={() => setBodyView('raw')}>Raw</button>
+                    {bodyView === 'pretty' && (
+                      <input
+                        className="md-input"
+                        placeholder="Filter…"
+                        value={bodySearch}
+                        onChange={(e) => setBodySearch(e.target.value)}
+                        style={{ height: '28px', flex: 1, minWidth: '120px' }}
+                      />
+                    )}
+                  </>
+                )}
+                <button className="types-lang-btn" onClick={downloadBody} style={{ marginLeft: 'auto' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>download</span> Download
+                </button>
+              </div>
+              {isJson && bodyView === 'pretty' ? (
+                <JsonTree data={parsed} rawText={prettyText} query={bodySearch} />
+              ) : (
+                <CodeView
+                  text={isJson ? res.rawText : prettyText}
+                  html={isJson ? syntaxHighlight(res.rawText) : bodyHtml}
+                />
+              )}
             </div>
 
             <div className={`md-tab-content ${tab.activeResTab === 'headers' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
@@ -124,6 +175,24 @@ export function ResponsePane() {
                   ))}
                 </div>
                 <CodeView text={typesCode} />
+              </div>
+            )}
+
+            {cookies.length > 0 && (
+              <div className={`md-tab-content ${tab.activeResTab === 'cookies' ? 'active' : ''}`}>
+                <div className="res-headers-grid">
+                  {cookies.map((c, i) => (
+                    <React.Fragment key={i}>
+                      <div className="header-key">{c.name}</div>
+                      <div className="header-value">
+                        {c.value}
+                        {c.attributes && (
+                          <span style={{ color: 'var(--md-sys-color-on-surface-variant)', fontSize: '12px' }}> — {c.attributes}</span>
+                        )}
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
             )}
 
