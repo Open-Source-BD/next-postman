@@ -123,8 +123,6 @@ export interface EnvVar {
   type?: KvItemType;
 }
 
-export type CodeLang = 'curl';
-
 export interface ExportData {
   collections: Collection[];
   environments: EnvVar[];

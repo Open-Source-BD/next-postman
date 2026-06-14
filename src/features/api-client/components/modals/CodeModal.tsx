@@ -1,29 +1,27 @@
 'use client';
-import { useApiStore } from '../../store/useApiStore';
+import { useMemo } from 'react';
+import { selectActiveTab, useApiStore } from '../../store/useApiStore';
+import { CODE_LANGS, generateCode } from '../../lib/codegen';
+import { CodeView } from '../CodeView';
 
 export function CodeModal() {
   const isOpen = useApiStore((s) => s.isCodeModalOpen);
-  const setOpen = useApiStore((s) => s.setCodeModalOpen);
-  const codeSnippet = useApiStore((s) => s.codeSnippet);
-  const copied = useApiStore((s) => s.copied);
-  const setCopied = useApiStore((s) => s.setCopied);
-
   if (!isOpen) return null;
+  return <CodeModalInner />;
+}
 
-  const copy = () => {
-    navigator.clipboard.writeText(codeSnippet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+function CodeModalInner() {
+  const setOpen = useApiStore((s) => s.setCodeModalOpen);
+  const tab = useApiStore(selectActiveTab);
+  const environments = useApiStore((s) => s.environments);
+  const lang = useApiStore((s) => s.codeLang);
+  const setLang = useApiStore((s) => s.setCodeLang);
+
+  const code = useMemo(() => generateCode(tab, environments, lang), [tab, environments, lang]);
 
   return (
-    <div
-      className="md-modal-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setOpen(false);
-      }}
-    >
-      <div className="md-modal" style={{ maxWidth: '700px', width: '95%' }}>
+    <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+      <div className="md-modal" style={{ maxWidth: '760px', width: '95%' }}>
         <div className="md-modal-header">
           <h3>Generate Code</h3>
           <button className="md-icon-btn-small" onClick={() => setOpen(false)}>
@@ -31,34 +29,19 @@ export function CodeModal() {
           </button>
         </div>
         <div className="md-modal-body">
-          <div style={{ position: 'relative' }}>
-            <pre
-              className="response-pre"
-              style={{
-                backgroundColor: 'var(--md-sys-color-surface-container-high)',
-                borderRadius: '8px',
-                overflowX: 'auto',
-              }}
-            >
-              {codeSnippet}
-            </pre>
-            <button
-              className="md-tonal-btn"
-              onClick={copy}
-              style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                height: '32px',
-                minWidth: 'unset',
-                padding: '4px 12px',
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px', marginRight: '4px' }}>
-                {copied ? 'check' : 'content_copy'}
-              </span>{' '}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
+          <div className="types-bar" style={{ borderBottom: 'none', padding: '0 0 12px' }}>
+            {CODE_LANGS.map((l) => (
+              <button
+                key={l.id}
+                className={`types-lang-btn ${lang === l.id ? 'active' : ''}`}
+                onClick={() => setLang(l.id)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '55vh', border: '1px solid var(--md-sys-color-outline-variant)', borderRadius: '8px', overflow: 'hidden' }}>
+            <CodeView text={code} />
           </div>
         </div>
       </div>

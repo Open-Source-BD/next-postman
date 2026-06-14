@@ -1,12 +1,6 @@
 import { create } from 'zustand';
-import type {
-  Collection,
-  EnvVar,
-  HistoryItem,
-  SidebarTab,
-  TabState,
-  CodeLang,
-} from '../types';
+import type { Collection, EnvVar, HistoryItem, SidebarTab, TabState } from '../types';
+import type { CodeLang } from '../lib/codegen';
 import { generateId } from '../lib/id';
 import * as tree from '../lib/collectionTree';
 

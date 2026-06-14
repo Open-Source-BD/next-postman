@@ -1,7 +1,6 @@
 'use client';
 import type { HttpMethod } from '../types';
 import { selectActiveTab, useApiStore } from '../store/useApiStore';
-import { generateCode } from '../lib/codegen';
 
 const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
 
@@ -12,18 +11,13 @@ interface UrlBarProps {
 export function UrlBar({ send }: UrlBarProps) {
   const tab = useApiStore(selectActiveTab);
   const isLoading = useApiStore((s) => s.isLoading);
-  const environments = useApiStore((s) => s.environments);
   const updateActiveTab = useApiStore((s) => s.updateActiveTab);
   const saveActiveRequest = useApiStore((s) => s.saveActiveRequest);
   const saveActiveRequestAs = useApiStore((s) => s.saveActiveRequestAs);
   const isSaved = useApiStore((s) => !!selectActiveTab(s).sourceNodeId);
-  const setCodeSnippet = useApiStore((s) => s.setCodeSnippet);
   const setCodeModalOpen = useApiStore((s) => s.setCodeModalOpen);
 
-  const openCode = () => {
-    setCodeSnippet(generateCode(tab, environments));
-    setCodeModalOpen(true);
-  };
+  const openCode = () => setCodeModalOpen(true);
 
   return (
     <div className="url-bar-container">
