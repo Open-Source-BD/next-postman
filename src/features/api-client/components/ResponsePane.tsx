@@ -8,9 +8,17 @@ import { parseSetCookie } from '../lib/cookies';
 import { CodeView } from './CodeView';
 import { JsonTree } from './JsonTree';
 
-export function ResponsePane() {
+interface ResponsePaneProps {
+  onExpand?: () => void;
+  onCollapse?: () => void;
+  /** Rendered inside the response modal — hides the expand/collapse/open controls. */
+  inModal?: boolean;
+}
+
+export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProps) {
   const tab = useApiStore(selectActiveTab);
   const updateActiveTab = useApiStore((s) => s.updateActiveTab);
+  const setResponseModalOpen = useApiStore((s) => s.setResponseModalOpen);
   const res = tab.response;
   const [typeLang, setTypeLang] = useState<TypeLang>('typescript');
   const [bodyView, setBodyView] = useState<'pretty' | 'raw'>('pretty');
@@ -66,6 +74,19 @@ export function ResponsePane() {
           <div>
             Size: <span className="value">{res ? formatSize(res.size) : '-'}</span>
           </div>
+          {!inModal && (
+            <div className="response-view-actions">
+              <button className="md-icon-btn-small" onClick={onExpand} title="Expand response">
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>expand_less</span>
+              </button>
+              <button className="md-icon-btn-small" onClick={onCollapse} title="Collapse response">
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>expand_more</span>
+              </button>
+              <button className="md-icon-btn-small" onClick={() => setResponseModalOpen(true)} title="Open in modal" disabled={!res}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>open_in_full</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -17,6 +17,7 @@ import { CodeModal } from './components/modals/CodeModal';
 import { MoveToModal } from './components/modals/MoveToModal';
 import { CurlModal } from './components/modals/CurlModal';
 import { CloseTabModal } from './components/modals/CloseTabModal';
+import { ResponseModal } from './components/modals/ResponseModal';
 
 export function ApiClient() {
   usePersistence();
@@ -37,6 +38,10 @@ export function ApiClient() {
     const next = Math.max(120, Math.min(clientY - top, total - 160));
     setRequestHeight(next);
   };
+  // Expand response → request small. Collapse response → request large.
+  const expandResponse = () => setRequestHeight(140);
+  const collapseResponse = () =>
+    setRequestHeight(Math.max(140, (splitRef.current?.clientHeight ?? 600) - 120));
 
   const triggerImport = () => fileInputRef.current?.click();
   const onExport = () => {
@@ -76,7 +81,7 @@ export function ApiClient() {
             <RequestPane send={send} />
           </div>
           <PaneResizer onDrag={resizeRequestPane} />
-          <ResponsePane />
+          <ResponsePane onExpand={expandResponse} onCollapse={collapseResponse} />
         </div>
       </main>
 
@@ -94,6 +99,7 @@ export function ApiClient() {
       <MoveToModal />
       <CurlModal />
       <CloseTabModal />
+      <ResponseModal />
     </div>
   );
 }

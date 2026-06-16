@@ -793,6 +793,36 @@ body {
 .pane-resizer:hover .pane-resizer-grip {
   background-color: var(--md-sys-color-on-primary);
 }
+.response-view-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+  padding-left: 8px;
+}
+.md-modal.response-modal {
+  width: 96vw;
+  max-width: 1600px;
+  height: 90vh;
+  min-width: 480px;
+  min-height: 320px;
+  max-height: 96vh;
+  display: flex;
+  flex-direction: column;
+  resize: both;
+  overflow: hidden;
+}
+.response-modal-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+.response-modal-body > .response-pane {
+  flex: 1;
+  min-height: 0;
+}
 .request-pane {
   display: flex;
   flex-direction: column;

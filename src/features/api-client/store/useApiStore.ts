@@ -80,6 +80,7 @@ interface ApiState {
   isCodeModalOpen: boolean;
   isMoveModalOpen: boolean;
   isCurlModalOpen: boolean;
+  isResponseModalOpen: boolean;
   /** Tab pending close-confirm (dirty). null = no modal. */
   closingTabId: string | null;
   moveNodeId: string | null;
@@ -160,6 +161,7 @@ interface ApiState {
   setIsLoading: (v: boolean) => void;
   setEnvModalOpen: (v: boolean) => void;
   setCurlModalOpen: (v: boolean) => void;
+  setResponseModalOpen: (v: boolean) => void;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
   setCodeLang: (v: CodeLang) => void;
@@ -189,6 +191,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
   isCodeModalOpen: false,
   isMoveModalOpen: false,
   isCurlModalOpen: false,
+  isResponseModalOpen: false,
   closingTabId: null,
   moveNodeId: null,
   pendingSave: null,
@@ -481,6 +484,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
   setIsLoading: (isLoading) => set({ isLoading }),
   setEnvModalOpen: (isEnvModalOpen) => set({ isEnvModalOpen }),
   setCurlModalOpen: (isCurlModalOpen) => set({ isCurlModalOpen }),
+  setResponseModalOpen: (isResponseModalOpen) => set({ isResponseModalOpen }),
   setSaveModalOpen: (isSaveModalOpen) => set({ isSaveModalOpen }),
   setCodeModalOpen: (isCodeModalOpen) => set({ isCodeModalOpen }),
   setCodeLang: (codeLang) => set({ codeLang }),
