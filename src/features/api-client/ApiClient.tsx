@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApiStore } from './store/useApiStore';
 import { usePersistence } from './store/persist';
 import { useRequestRunner } from './hooks/useRequestRunner';
@@ -10,6 +10,7 @@ import { TopBar } from './components/TopBar';
 import { RequestTabsBar } from './components/RequestTabsBar';
 import { RequestPane } from './components/RequestPane';
 import { ResponsePane } from './components/ResponsePane';
+import { PaneResizer } from './components/PaneResizer';
 import { EnvModal } from './components/modals/EnvModal';
 import { SaveModal } from './components/modals/SaveModal';
 import { CodeModal } from './components/modals/CodeModal';
@@ -27,6 +28,15 @@ export function ApiClient() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const splitRef = useRef<HTMLDivElement>(null);
+  const [requestHeight, setRequestHeight] = useState(340);
+
+  const resizeRequestPane = (clientY: number) => {
+    const top = splitRef.current?.getBoundingClientRect().top ?? 0;
+    const total = splitRef.current?.clientHeight ?? 0;
+    const next = Math.max(120, Math.min(clientY - top, total - 160));
+    setRequestHeight(next);
+  };
 
   const triggerImport = () => fileInputRef.current?.click();
   const onExport = () => {
@@ -61,8 +71,13 @@ export function ApiClient() {
       <main className="main-area">
         <TopBar />
         <RequestTabsBar />
-        <RequestPane send={send} />
-        <ResponsePane />
+        <div className="pane-split" ref={splitRef}>
+          <div className="request-pane-wrap" style={{ height: requestHeight }}>
+            <RequestPane send={send} />
+          </div>
+          <PaneResizer onDrag={resizeRequestPane} />
+          <ResponsePane />
+        </div>
       </main>
 
       <input
