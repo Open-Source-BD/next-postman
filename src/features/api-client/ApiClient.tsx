@@ -15,6 +15,7 @@ import { SaveModal } from './components/modals/SaveModal';
 import { CodeModal } from './components/modals/CodeModal';
 import { MoveToModal } from './components/modals/MoveToModal';
 import { CurlModal } from './components/modals/CurlModal';
+import { CloseTabModal } from './components/modals/CloseTabModal';
 
 export function ApiClient() {
   usePersistence();
@@ -77,6 +78,7 @@ export function ApiClient() {
       <CodeModal />
       <MoveToModal />
       <CurlModal />
+      <CloseTabModal />
     </div>
   );
 }

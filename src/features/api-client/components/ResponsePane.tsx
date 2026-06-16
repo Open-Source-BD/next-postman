@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { selectActiveTab, useApiStore } from '../store/useApiStore';
 import { formatSize } from '../lib/format';
 import { syntaxHighlight } from '../lib/syntaxHighlight';
@@ -16,7 +16,17 @@ export function ResponsePane() {
   const [bodyView, setBodyView] = useState<'pretty' | 'raw'>('pretty');
   const [bodySearch, setBodySearch] = useState('');
 
-  const cookies = useMemo(() => parseSetCookie(res?.headers['set-cookie']), [res]);
+  const cookies = parseSetCookie(res?.headers['set-cookie']);
+
+  const parseJson = (text: string | undefined): unknown => {
+    if (text === undefined) return undefined;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return undefined;
+    }
+  };
+  const parsed = parseJson(res?.rawText);
 
   const downloadBody = () => {
     if (!res) return;
@@ -29,25 +39,13 @@ export function ResponsePane() {
     URL.revokeObjectURL(url);
   };
 
-  const parsed = useMemo<unknown>(() => {
-    if (!res) return undefined;
-    try {
-      return JSON.parse(res.rawText);
-    } catch {
-      return undefined;
-    }
-  }, [res]);
-
   const isJson = parsed !== undefined && typeof parsed === 'object' && parsed !== null;
   const prettyText = isJson ? JSON.stringify(parsed, null, 2) : res?.rawText ?? '';
   const bodyHtml = isJson
     ? syntaxHighlight(prettyText)
     : (res?.rawText ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  const typesCode = useMemo(
-    () => (isJson ? generateTypes(parsed, typeLang) : ''),
-    [isJson, parsed, typeLang]
-  );
+  const typesCode = isJson ? generateTypes(parsed, typeLang) : '';
 
   return (
     <section className="response-pane md-surface-container-lowest">

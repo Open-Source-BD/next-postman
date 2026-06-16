@@ -75,6 +75,8 @@ export interface TabState {
   activeResTab: ResponseSubTab;
   /** Id of the saved RequestNode this tab was opened from (for Save vs Save As). */
   sourceNodeId?: string;
+  /** Id of the HistoryItem this tab was replayed from (dedupe repeat clicks). */
+  sourceHistoryId?: string;
 }
 
 export interface HistoryItem {

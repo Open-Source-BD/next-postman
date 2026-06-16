@@ -713,6 +713,13 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.req-tab-dirty {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-primary);
+  flex-shrink: 0;
+}
 .req-tab-close {
   background: none;
   border: none;

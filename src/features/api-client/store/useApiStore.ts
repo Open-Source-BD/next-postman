@@ -3,6 +3,7 @@ import type { Collection, EnvVar, Environment, HistoryItem, SidebarTab, TabState
 import type { CodeLang } from '../lib/codegen';
 import { generateId } from '../lib/id';
 import * as tree from '../lib/collectionTree';
+import { isTabDirty } from '../lib/tabDirty';
 
 /** Accept either the new Environment[] shape or a legacy flat EnvVar[]. */
 function migrateEnvironments(raw: unknown): Environment[] {
@@ -79,6 +80,8 @@ interface ApiState {
   isCodeModalOpen: boolean;
   isMoveModalOpen: boolean;
   isCurlModalOpen: boolean;
+  /** Tab pending close-confirm (dirty). null = no modal. */
+  closingTabId: string | null;
   moveNodeId: string | null;
   pendingSave: PendingSave | null;
   codeLang: CodeLang;
@@ -91,6 +94,11 @@ interface ApiState {
   // Tabs
   newTab: (req?: TabState) => void;
   closeTab: (id: string) => void;
+  /** Close if clean; if dirty (unsaved edits to a saved node), open the close-confirm modal. */
+  requestCloseTab: (id: string) => void;
+  confirmCloseTab: () => void;
+  saveAndCloseTab: () => void;
+  cancelCloseTab: () => void;
   setActiveTab: (id: string) => void;
   updateActiveTab: (updates: Partial<TabState>) => void;
 
@@ -181,6 +189,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
   isCodeModalOpen: false,
   isMoveModalOpen: false,
   isCurlModalOpen: false,
+  closingTabId: null,
   moveNodeId: null,
   pendingSave: null,
   codeLang: 'curl',
@@ -208,6 +217,42 @@ export const useApiStore = create<ApiState>((set, get) => ({
     set({ tabs: tabs.filter((t) => t.id !== id), activeTabId: nextActive });
   },
 
+  requestCloseTab: (id) => {
+    const tab = get().tabs.find((t) => t.id === id);
+    if (tab && isTabDirty(tab, get().collections)) {
+      set({ closingTabId: id });
+      return;
+    }
+    get().closeTab(id);
+  },
+
+  confirmCloseTab: () => {
+    const { closingTabId } = get();
+    if (!closingTabId) return;
+    set({ closingTabId: null });
+    get().closeTab(closingTabId);
+  },
+
+  saveAndCloseTab: () => {
+    const { closingTabId, collections } = get();
+    if (!closingTabId) return;
+    const tab = get().tabs.find((t) => t.id === closingTabId);
+    set({ activeTabId: closingTabId });
+    const savedNode = tab?.sourceNodeId && tree.findNode(collections, tab.sourceNodeId);
+    if (savedNode) {
+      // Existing saved request → write to node and close.
+      get().saveActiveRequest();
+      set({ closingTabId: null });
+      get().closeTab(closingTabId);
+    } else {
+      // Unsaved request → open Save modal; keep tab open (close after naming/saving).
+      set({ closingTabId: null });
+      get().saveActiveRequest();
+    }
+  },
+
+  cancelCloseTab: () => set({ closingTabId: null }),
+
   setActiveTab: (id) => set({ activeTabId: id }),
 
   updateActiveTab: (updates) =>
@@ -222,8 +267,15 @@ export const useApiStore = create<ApiState>((set, get) => ({
   deleteHistoryItem: (id) => set((s) => ({ history: s.history.filter((h) => h.id !== id) })),
   clearHistory: () => set({ history: [] }),
   replayHistory: (item) => {
+    // Already replayed? Focus that tab instead of creating a duplicate.
+    const existing = get().tabs.find((t) => t.sourceHistoryId === item.id);
+    if (existing) {
+      set({ activeTabId: existing.id });
+      return;
+    }
     const req = item.request ?? { ...createDefaultTab(), method: item.method, url: item.url };
     get().newTab(req);
+    get().updateActiveTab({ sourceHistoryId: item.id });
   },
 
   // --- Collections ---

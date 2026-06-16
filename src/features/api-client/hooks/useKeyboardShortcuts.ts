@@ -31,7 +31,7 @@ export function useKeyboardShortcuts({ send, triggerImport }: Options): void {
         s.newTab();
       } else if (key === 'w') {
         e.preventDefault();
-        if (s.activeTabId) s.closeTab(s.activeTabId);
+        if (s.activeTabId) s.requestCloseTab(s.activeTabId);
       } else if (key === 'e') {
         e.preventDefault();
         if (e.shiftKey) s.setEnvModalOpen(true);
