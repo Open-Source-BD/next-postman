@@ -1,6 +1,5 @@
 'use client';
-import { useMemo } from 'react';
-import { selectActiveTab, selectActiveVars, useApiStore } from '../../store/useApiStore';
+import { selectActiveTab, useApiStore } from '../../store/useApiStore';
 import { CODE_LANGS, generateCode } from '../../lib/codegen';
 import { CodeView } from '../CodeView';
 
@@ -13,11 +12,15 @@ export function CodeModal() {
 function CodeModalInner() {
   const setOpen = useApiStore((s) => s.setCodeModalOpen);
   const tab = useApiStore(selectActiveTab);
-  const vars = useApiStore(selectActiveVars);
+  const environments = useApiStore((s) => s.environments);
+  const activeEnvId = useApiStore((s) => s.activeEnvId);
+  const globals = useApiStore((s) => s.globals);
   const lang = useApiStore((s) => s.codeLang);
   const setLang = useApiStore((s) => s.setCodeLang);
 
-  const code = useMemo(() => generateCode(tab, vars, lang), [tab, vars, lang]);
+  const activeEnv = environments.find((e) => e.id === activeEnvId);
+  const vars = [...globals, ...(activeEnv?.vars ?? [])];
+  const code = generateCode(tab, vars, lang);
 
   return (
     <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
