@@ -20,6 +20,8 @@ export interface ExecuteOptions {
   signal?: AbortSignal;
   /** Per-request timeout in ms. Default 30s. */
   timeoutMs?: number;
+  /** Cookie header value from the jar, attached unless the request sets its own. */
+  cookieHeader?: string;
 }
 
 /**
@@ -54,7 +56,7 @@ export async function executeRequest(
   const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 30000);
 
   try {
-    const { finalUrl, ...resData } = await sendViaProxy(tab, vars, ctrl.signal);
+    const { finalUrl, ...resData } = await sendViaProxy(tab, vars, ctrl.signal, opts.cookieHeader);
     sandbox.attachResponse(resData.status, resData.statusText, resData.rawText);
     sandbox.runTests(tab.tests);
     return { response: { ...resData, testResults: sandbox.testResults }, finalUrl };

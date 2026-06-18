@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { selectActiveTab, selectActiveVars, useApiStore } from '../store/useApiStore';
 import { executeRequest } from '../lib/executeRequest';
 import { resolveEnv } from '../lib/envResolver';
+import { cookieHeaderFor } from '../lib/cookies';
 import { generateId } from '../lib/id';
 import type { TabState } from '../types';
 
@@ -23,8 +24,10 @@ export function useRequestRunner(): () => Promise<void> {
       state.updateActiveTab({ url: 'http://' + resolved });
     }
 
-    // Single-send persists script var writes to the active env (via setEnvVar).
-    const result = await executeRequest(tab, vars, { onSetVar: state.setEnvVar });
+    // Single-send persists script var writes to the active env (via setEnvVar)
+    // and auto-attaches jar cookies for the target host.
+    const cookieHeader = cookieHeaderFor(state.cookieJar, resolved);
+    const result = await executeRequest(tab, vars, { onSetVar: state.setEnvVar, cookieHeader });
 
     if (result.error?.phase === 'pre-request') {
       alert('Pre-request Script Error:\n' + result.error.message);
@@ -51,6 +54,7 @@ export function useRequestRunner(): () => Promise<void> {
     }
 
     state.updateActiveTab({ response: result.response, activeResTab: 'body' });
+    state.captureCookies(result.finalUrl ?? tab.url, result.response.headers['set-cookie']);
     const snapshot: TabState = { ...JSON.parse(JSON.stringify(tab)), response: null, sourceNodeId: undefined };
     state.addHistory({
       id: generateId(),

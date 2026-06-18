@@ -1,5 +1,6 @@
 import type { EnvVar, HttpMethod, RequestNode, TestResult } from '../types';
 import { executeRequest } from './executeRequest';
+import { resolveEnv } from './envResolver';
 
 /** One executed request within a run (per iteration). */
 export interface RunResultItem {
@@ -27,6 +28,10 @@ export interface RunConfig {
   signal: AbortSignal;
   onResult: (item: RunResultItem) => void;
   onProgress: (current: number, total: number) => void;
+  /** Cookie header for a resolved URL (shared jar). */
+  cookieHeaderFor?: (url: string) => string;
+  /** Capture a response Set-Cookie into the jar. */
+  onCookies?: (url: string, setCookieHeader: string | undefined) => void;
 }
 
 /**
@@ -54,11 +59,14 @@ export async function runCollection(cfg: RunConfig): Promise<void> {
     for (const node of cfg.requests) {
       if (cfg.signal.aborted) return;
       const seed: EnvVar[] = [...bag.entries()].map(([key, value]) => ({ id: `v:${key}`, key, value }));
+      const resolvedUrl = cfg.cookieHeaderFor ? resolveEnv(node.request.url, seed) : '';
       const res = await executeRequest(node.request, seed, {
         iterationData: row,
         signal: cfg.signal,
         onSetVar: (k, v) => bag.set(k, v),
+        cookieHeader: cfg.cookieHeaderFor?.(resolvedUrl),
       });
+      cfg.onCookies?.(res.finalUrl ?? resolvedUrl, res.response?.headers['set-cookie']);
       done++;
       cfg.onResult({
         requestId: node.id,

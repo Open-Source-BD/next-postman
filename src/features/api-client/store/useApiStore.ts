@@ -7,6 +7,7 @@ import { isTabDirty } from '../lib/tabDirty';
 import { runCollection, type RunResultItem } from '../lib/collectionRunner';
 import { parseData } from '../lib/parseData';
 import { serializeWorkspace, deserializeWorkspace } from '../lib/workspaceFile';
+import { cookieHeaderFor, mergeSetCookie, type CookieJar } from '../lib/cookies';
 import {
   isFsSupported, pickWorkspaceDir, saveHandle, loadHandle, clearHandle,
   ensurePermission, writeWorkspace, readWorkspace, type WorkspaceHandle,
@@ -121,6 +122,9 @@ interface ApiState {
   workspaceError: string | null;
   /** Cmd/Ctrl-K command palette. */
   isCommandPaletteOpen: boolean;
+  /** Cookie jar: hostname → cookies, auto-captured and auto-attached. */
+  cookieJar: CookieJar;
+  isCookieModalOpen: boolean;
   /** Tab pending close-confirm (dirty). null = no modal. */
   closingTabId: string | null;
   moveNodeId: string | null;
@@ -189,6 +193,7 @@ interface ApiState {
     tabs?: TabState[];
     activeTabId?: string;
     theme?: Theme;
+    cookieJar?: CookieJar;
   }) => void;
 
   // UI setters
@@ -215,6 +220,9 @@ interface ApiState {
   loadFromWorkspace: () => Promise<void>;
   disconnectWorkspace: () => Promise<void>;
   setCommandPaletteOpen: (v: boolean) => void;
+  captureCookies: (url: string, setCookieHeader: string | undefined) => void;
+  clearCookies: (domain?: string) => void;
+  setCookieModalOpen: (v: boolean) => void;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
   setCodeLang: (v: CodeLang) => void;
@@ -255,6 +263,8 @@ export const useApiStore = create<ApiState>((set, get) => ({
   workspaceBusy: false,
   workspaceError: null,
   isCommandPaletteOpen: false,
+  cookieJar: {},
+  isCookieModalOpen: false,
   closingTabId: null,
   moveNodeId: null,
   pendingSave: null,
@@ -531,6 +541,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
       tabs,
       activeTabId,
       theme: data.theme === 'dark' ? 'dark' : 'light',
+      cookieJar: data.cookieJar && typeof data.cookieJar === 'object' ? data.cookieJar : {},
       expanded,
       hydrated: true,
     });
@@ -593,6 +604,8 @@ export const useApiStore = create<ApiState>((set, get) => ({
       signal: runAbort.signal,
       onResult: (item) => set((s) => ({ runnerResults: [...s.runnerResults, item] })),
       onProgress: (current, total) => set({ runnerProgress: { current, total } }),
+      cookieHeaderFor: (url) => cookieHeaderFor(get().cookieJar, url),
+      onCookies: (url, sc) => get().captureCookies(url, sc),
     });
 
     runAbort = null;
@@ -709,6 +722,19 @@ export const useApiStore = create<ApiState>((set, get) => ({
   },
 
   setCommandPaletteOpen: (isCommandPaletteOpen) => set({ isCommandPaletteOpen }),
+  setCookieModalOpen: (isCookieModalOpen) => set({ isCookieModalOpen }),
+
+  captureCookies: (url, setCookieHeader) =>
+    set((s) => ({ cookieJar: mergeSetCookie(s.cookieJar, url, setCookieHeader) })),
+
+  clearCookies: (domain) =>
+    set((s) => {
+      if (!domain) return { cookieJar: {} };
+      const next = { ...s.cookieJar };
+      delete next[domain];
+      return { cookieJar: next };
+    }),
+
   setSaveModalOpen: (isSaveModalOpen) => set({ isSaveModalOpen }),
   setCodeModalOpen: (isCodeModalOpen) => set({ isCodeModalOpen }),
   setCodeLang: (codeLang) => set({ codeLang }),

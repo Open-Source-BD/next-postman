@@ -50,6 +50,7 @@ function CommandPaletteInner() {
     { key: 'env', label: 'Manage environments', hint: 'environment variables', icon: 'settings', run: act(() => s().setEnvModalOpen(true)) },
     { key: 'theme', label: 'Toggle light / dark theme', hint: 'theme appearance', icon: 'dark_mode', run: act(() => s().toggleTheme()) },
     { key: 'workspace', label: 'Connect workspace folder', hint: 'git storage save', icon: 'create_new_folder', run: act(() => s().connectWorkspace()) },
+    { key: 'cookies', label: 'Manage cookies', hint: 'cookie jar session', icon: 'cookie', run: act(() => s().setCookieModalOpen(true)) },
     ...environments.map((e) => ({
       key: `env-${e.id}`, label: `Switch to environment: ${e.name}`, hint: 'environment', icon: 'layers',
       run: act(() => s().setActiveEnv(e.id)),

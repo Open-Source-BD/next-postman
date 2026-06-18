@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 const EXCLUDED_REQUEST_HEADERS = [
   'x-proxy-target-url',
   'x-proxy-method',
+  'x-proxy-cookie',
   'host',
   'connection',
   'content-length',
@@ -30,6 +31,11 @@ export async function POST(req: Request) {
       if (EXCLUDED_REQUEST_HEADERS.includes(key.toLowerCase())) return;
       forwardHeaders.set(key, value);
     });
+
+    // `Cookie` is a forbidden header for the client fetch, so the cookie jar
+    // sends it as X-Proxy-Cookie; restore it as the real Cookie header here.
+    const proxyCookie = req.headers.get('x-proxy-cookie');
+    if (proxyCookie) forwardHeaders.set('cookie', proxyCookie);
 
     let body: ArrayBuffer | undefined;
     if (BODY_METHODS.includes(targetMethod)) {

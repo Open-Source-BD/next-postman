@@ -14,6 +14,7 @@ import { MoveToModal } from "./components/modals/MoveToModal";
 import { ResponseModal } from "./components/modals/ResponseModal";
 import { RunnerModal } from "./components/modals/RunnerModal";
 import { CommandPalette } from "./components/CommandPalette";
+import { CookiesModal } from "./components/modals/CookiesModal";
 import { SaveModal } from "./components/modals/SaveModal";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useRequestRunner } from "./hooks/useRequestRunner";
@@ -121,6 +122,7 @@ export function ApiClient() {
       <ResponseModal />
       <RunnerModal />
       <CommandPalette />
+      <CookiesModal />
     </div>
   );
 }

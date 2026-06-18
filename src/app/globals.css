@@ -1221,3 +1221,13 @@ body {
   flex: none; font-size: 12px; opacity: 0.7; max-width: 45%;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+/* --- Cookies manager --- */
+.cookies-intro { font-size: 13px; color: var(--md-sys-color-on-surface-variant); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.cookies-empty { padding: 24px; text-align: center; color: var(--md-sys-color-on-surface-variant); font-size: 14px; }
+.cookies-domain { border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+.cookies-domain-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 6px 12px; background: var(--md-sys-color-surface-container-high); }
+.cookies-host { font-weight: 500; font-size: 13px; }
+.cookies-row { display: flex; gap: 10px; padding: 6px 12px; font-family: var(--mono-font); font-size: 12px; border-top: 1px solid var(--md-sys-color-outline-variant); }
+.cookies-name { color: var(--md-sys-color-primary); flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+.cookies-value { color: var(--md-sys-color-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

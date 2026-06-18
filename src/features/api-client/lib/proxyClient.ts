@@ -28,7 +28,8 @@ export function normalizeUrl(url: string): string {
 export async function sendViaProxy(
   tab: TabState,
   environments: EnvVar[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  cookieHeader?: string
 ): Promise<ProxyResult> {
   const r = (s: string) => resolveEnv(s, environments);
 
@@ -92,6 +93,9 @@ export async function sendViaProxy(
   const proxyHeaders = new Headers(fetchHeaders);
   proxyHeaders.set('X-Proxy-Target-Url', url.toString());
   proxyHeaders.set('X-Proxy-Method', tab.method);
+  // `Cookie` is a forbidden fetch header; smuggle the jar's cookies via a
+  // custom header the proxy restores. Don't override an explicit Cookie header.
+  if (cookieHeader && !fetchHeaders.has('Cookie')) proxyHeaders.set('X-Proxy-Cookie', cookieHeader);
 
   // Let fetch set the multipart boundary itself for form-data.
   if (tab.body.type === 'formdata' && fetchBody instanceof FormData) {
