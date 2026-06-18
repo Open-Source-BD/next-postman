@@ -5,8 +5,21 @@ import { formatSize } from '../lib/format';
 import { syntaxHighlight } from '../lib/syntaxHighlight';
 import { generateTypes, TYPE_LANGS, type TypeLang } from '../lib/jsonToTypes';
 import { parseSetCookie } from '../lib/cookies';
+import { diffLines, diffStats } from '../lib/diffLines';
 import { CodeView } from './CodeView';
 import { JsonTree } from './JsonTree';
+
+/** Pretty-print a body for stable diffing (indented JSON when parseable). */
+function prettyBody(rawText: string | undefined): string {
+  if (rawText === undefined) return '';
+  try {
+    const v = JSON.parse(rawText);
+    if (v && typeof v === 'object') return JSON.stringify(v, null, 2);
+  } catch {
+    /* not JSON */
+  }
+  return rawText;
+}
 
 interface ResponsePaneProps {
   onExpand?: () => void;
@@ -54,6 +67,10 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
     : (res?.rawText ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const typesCode = isJson ? generateTypes(parsed, typeLang) : '';
+
+  const prev = tab.prevResponse;
+  const diff = prev && res ? diffLines(prettyBody(prev.rawText), prettyBody(res.rawText)) : [];
+  const diffSummary = diffStats(diff);
 
   return (
     <section className="response-pane md-surface-container-lowest">
@@ -122,6 +139,15 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
             onClick={() => updateActiveTab({ activeResTab: 'testresults' })}
           >
             Test Results
+          </button>
+        )}
+        {prev && res && (
+          <button
+            className={`md-tab-btn ${tab.activeResTab === 'diff' ? 'active' : ''}`}
+            onClick={() => updateActiveTab({ activeResTab: 'diff' })}
+            title="Compare this response with the previous run"
+          >
+            Diff
           </button>
         )}
       </div>
@@ -244,6 +270,35 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
                 </div>
               ))}
             </div>
+
+            {prev && (
+              <div className={`md-tab-content ${tab.activeResTab === 'diff' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
+                <div className="diff-summary">
+                  <span className="diff-prev">prev {prev.status}</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
+                  <span className="diff-cur">current {res.status}</span>
+                  <span className="diff-counts">
+                    <span className="diff-add-count">+{diffSummary.added}</span>{' '}
+                    <span className="diff-del-count">-{diffSummary.removed}</span>
+                  </span>
+                </div>
+                {diffSummary.added === 0 && diffSummary.removed === 0 ? (
+                  <div className="empty-state" style={{ padding: '32px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '40px', opacity: 0.5 }}>check</span>
+                    <span>Response body is identical to the previous run.</span>
+                  </div>
+                ) : (
+                  <pre className="diff-view">
+                    {diff.map((line, i) => (
+                      <div key={i} className={`diff-line diff-${line.type}`}>
+                        <span className="diff-gutter">{line.type === 'add' ? '+' : line.type === 'del' ? '-' : ' '}</span>
+                        {line.text || ' '}
+                      </div>
+                    ))}
+                  </pre>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

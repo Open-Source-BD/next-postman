@@ -1,7 +1,7 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS';
 
 export type RequestSubTab = 'params' | 'auth' | 'headers' | 'body' | 'scripts' | 'tests';
-export type ResponseSubTab = 'body' | 'headers' | 'types' | 'cookies' | 'testresults';
+export type ResponseSubTab = 'body' | 'headers' | 'types' | 'cookies' | 'testresults' | 'diff';
 export type SidebarTab = 'history' | 'collections';
 
 export type KvItemType = 'text' | 'file';
@@ -71,6 +71,8 @@ export interface TabState {
   scripts: string;
   tests: string;
   response: ResponseData | null;
+  /** Previous run's response, kept in-memory for the Diff view (not persisted). */
+  prevResponse?: ResponseData | null;
   activeSubTab: RequestSubTab;
   activeResTab: ResponseSubTab;
   /** Id of the saved RequestNode this tab was opened from (for Save vs Save As). */

@@ -57,7 +57,7 @@ export function usePersistence(): void {
       }
       if (state.tabs !== prev.tabs) {
         // Drop live responses to keep storage small; files don't serialize.
-        localStorage.setItem(K_TABS, JSON.stringify(state.tabs.map((t) => ({ ...t, response: null }))));
+        localStorage.setItem(K_TABS, JSON.stringify(state.tabs.map((t) => ({ ...t, response: null, prevResponse: null }))));
       }
       if (state.activeTabId !== prev.activeTabId) {
         localStorage.setItem(K_ACTIVE_TAB, JSON.stringify(state.activeTabId));

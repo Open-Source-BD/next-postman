@@ -53,7 +53,8 @@ export function useRequestRunner(): () => Promise<void> {
       return;
     }
 
-    state.updateActiveTab({ response: result.response, activeResTab: 'body' });
+    // Keep the prior response for the Diff view before overwriting it.
+    state.updateActiveTab({ response: result.response, prevResponse: tab.response, activeResTab: 'body' });
     state.captureCookies(result.finalUrl ?? tab.url, result.response.headers['set-cookie']);
     const snapshot: TabState = { ...JSON.parse(JSON.stringify(tab)), response: null, sourceNodeId: undefined };
     state.addHistory({
