@@ -1328,6 +1328,7 @@ body {
 .rt-error { color: var(--md-sys-color-error); font-size: 12px; }
 .rt-count { margin-left: auto; color: var(--md-sys-color-on-surface-variant); font-size: 12px; }
 .rt-log {
+  position: relative; /* contain the absolute .empty-state to the log, not the viewport */
   flex: 1; min-height: 0; overflow-y: auto; padding: 8px 0;
   font-family: var(--mono-font); font-size: 12px;
 }
