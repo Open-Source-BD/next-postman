@@ -1,6 +1,8 @@
+import { load as yamlLoad } from 'js-yaml';
 import type { Collection, EnvVar, Environment, ExportData } from '../types';
 import { migrateCollections } from './collectionTree';
 import { fromPostman, isPostmanCollection, toPostman } from './postmanFormat';
+import { fromOpenApi, isOpenApi } from './parseOpenApi';
 import { generateId } from './id';
 
 /** Accept either Environment[] or a legacy flat EnvVar[] from imported data. */
@@ -40,29 +42,49 @@ export interface ParsedImport {
   environments: Environment[];
 }
 
+/** Parse import text as JSON, falling back to YAML (for OpenAPI specs). */
+function parseDoc(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return yamlLoad(text); // throws on invalid YAML → surfaced as a failed import
+  }
+}
+
+/** Route a parsed document to the right importer. */
+export function importFromDoc(json: unknown): ParsedImport {
+  if (isPostmanCollection(json)) {
+    return { collections: [fromPostman(json)], environments: [] };
+  }
+
+  if (isOpenApi(json)) {
+    const { collection, baseUrl } = fromOpenApi(json);
+    const environments: Environment[] = baseUrl
+      ? [{ id: generateId(), name: `${collection.name} env`, vars: [{ id: generateId(), key: 'baseUrl', value: baseUrl }] }]
+      : [];
+    return { collections: [collection], environments };
+  }
+
+  const data = json as Partial<ExportData>;
+  return {
+    collections: migrateCollections(data.collections ?? []),
+    environments: migrateEnvs(data.environments),
+  };
+}
+
 /**
- * Read + parse an imported JSON file. Auto-detects Postman Collection v2.1 vs
- * the app's own export, and migrates legacy flat collections to the tree shape.
+ * Read + parse an imported file. Auto-detects Postman Collection v2.1, OpenAPI
+ * 3.0/3.1 (JSON or YAML), or the app's own export; migrates legacy flat
+ * collections to the tree shape.
  */
 export function parseImportFile(file: File): Promise<ParsedImport> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const json = JSON.parse(String(ev.target?.result)) as unknown;
-
-        if (isPostmanCollection(json)) {
-          resolve({ collections: [fromPostman(json)], environments: [] });
-          return;
-        }
-
-        const data = json as Partial<ExportData>;
-        resolve({
-          collections: migrateCollections(data.collections ?? []),
-          environments: migrateEnvs(data.environments),
-        });
+        resolve(importFromDoc(parseDoc(String(ev.target?.result))));
       } catch {
-        reject(new Error('Invalid JSON file.'));
+        reject(new Error('Invalid or unsupported file (expected JSON or YAML).'));
       }
     };
     reader.onerror = () => reject(new Error('Failed to read file.'));

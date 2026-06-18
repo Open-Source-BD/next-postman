@@ -61,8 +61,8 @@ export function ApiClient() {
       const { collections, environments } = await parseImportFile(file);
       useApiStore.getState().mergeImport(collections, environments);
       alert("Import successful!");
-    } catch {
-      alert("Invalid JSON file.");
+    } catch (err) {
+      alert((err as Error).message || "Import failed.");
     }
     e.target.value = "";
   };
@@ -101,7 +101,7 @@ export function ApiClient() {
       <input
         type="file"
         ref={fileInputRef}
-        accept=".json"
+        accept=".json,.yaml,.yml"
         style={{ display: "none" }}
         onChange={handleImport}
       />
