@@ -23,6 +23,7 @@ function EnvModalInner() {
   const setActiveEnv = useApiStore((s) => s.setActiveEnv);
   const setEnvVars = useApiStore((s) => s.setEnvVars);
   const setGlobals = useApiStore((s) => s.setGlobals);
+  const transferVar = useApiStore((s) => s.transferVar);
 
   const [selectedId, setSelectedId] = useState<string>(activeEnvId ?? GLOBALS);
   const [newName, setNewName] = useState('');
@@ -41,6 +42,40 @@ function EnvModalInner() {
   const vars: EnvVar[] = isGlobals ? globals : selectedEnv?.vars ?? [];
   const onVarsChange = (items: EnvVar[]) =>
     isGlobals ? setGlobals(items) : selectedEnv && setEnvVars(selectedEnv.id, items);
+
+  // Copy/move targets: every other container (Globals + other envs).
+  const currentId = isGlobals ? null : selectedEnv?.id ?? null;
+  const targets = [
+    { key: GLOBALS, id: null as string | null, name: 'Globals' },
+    ...environments.map((e) => ({ key: e.id, id: e.id as string | null, name: e.name })),
+  ].filter((t) => t.id !== currentId);
+
+  const renderRowExtra = (item: { id: string; key: string }) => {
+    if (!item.key.trim() || targets.length === 0) return null;
+    return (
+      <select
+        className="md-select env-var-move"
+        value=""
+        title="Copy or move this variable to another environment"
+        aria-label="Copy or move variable to another environment"
+        onChange={(ev) => {
+          const val = ev.target.value;
+          if (!val) return;
+          const [mode, key] = val.split('|');
+          transferVar(item.id, currentId, key === GLOBALS ? null : key, mode as 'copy' | 'move');
+          ev.target.value = '';
+        }}
+      >
+        <option value="">⇄</option>
+        <optgroup label="Copy to">
+          {targets.map((t) => <option key={`c-${t.key}`} value={`copy|${t.key}`}>{t.name}</option>)}
+        </optgroup>
+        <optgroup label="Move to">
+          {targets.map((t) => <option key={`m-${t.key}`} value={`move|${t.key}`}>{t.name}</option>)}
+        </optgroup>
+      </select>
+    );
+  };
 
   return (
     <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
@@ -115,7 +150,7 @@ function EnvModalInner() {
                 <span>Select an environment</span>
               )}
             </div>
-            <KvEditor items={vars} onChange={onVarsChange} />
+            <KvEditor items={vars} onChange={onVarsChange} renderRowExtra={renderRowExtra} />
           </div>
         </div>
       </div>

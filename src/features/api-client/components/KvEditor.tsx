@@ -1,4 +1,5 @@
 'use client';
+import type { ReactNode } from 'react';
 import type { KvItem } from '../types';
 import { generateId } from '../lib/id';
 
@@ -6,9 +7,11 @@ interface KvEditorProps {
   items: KvItem[];
   onChange: (items: KvItem[]) => void;
   allowFile?: boolean;
+  /** Optional per-row control rendered before the delete button (e.g. env move/copy). */
+  renderRowExtra?: (item: KvItem, index: number) => ReactNode;
 }
 
-export function KvEditor({ items, onChange, allowFile = false }: KvEditorProps) {
+export function KvEditor({ items, onChange, allowFile = false, renderRowExtra }: KvEditorProps) {
   const patch = (idx: number, updates: Partial<KvItem>) => {
     const next = items.map((it, i) => (i === idx ? { ...it, ...updates } : it));
     onChange(next);
@@ -48,6 +51,7 @@ export function KvEditor({ items, onChange, allowFile = false }: KvEditorProps) 
               onChange={(e) => patch(idx, { value: e.target.value })}
             />
           )}
+          {renderRowExtra?.(item, idx)}
           <button
             className="md-icon-btn danger delete-row-btn"
             onClick={() => onChange(items.filter((_, i) => i !== idx))}

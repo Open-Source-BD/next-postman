@@ -1282,3 +1282,15 @@ body {
   border-radius: 3px;
   padding: 1px 0;
 }
+
+/* --- Env var copy/move picker --- */
+.env-var-move {
+  flex: none;
+  width: 44px;
+  height: 40px;
+  padding: 0 4px;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+}
+.env-var-move:hover { color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); }
