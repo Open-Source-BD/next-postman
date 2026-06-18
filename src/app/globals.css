@@ -1249,3 +1249,36 @@ body {
 .var-suggest-row.active { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
 .var-suggest-name { color: var(--md-sys-color-primary); }
 .var-suggest-row.active .var-suggest-name { color: var(--md-sys-color-on-primary-container); }
+
+/* --- {{var}} colored token overlay (VarInput) --- */
+.var-input-field {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+  color: transparent !important;
+  caret-color: var(--md-sys-color-on-surface);
+}
+/* Keep border width + padding stable on focus so the backdrop stays aligned. */
+.var-input-field:focus {
+  border-width: 1px !important;
+  padding: 0 16px !important;
+  border-color: var(--md-sys-color-primary);
+}
+.var-input-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  white-space: pre;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--md-sys-color-on-surface);
+  border-color: transparent !important;
+}
+.tok-var {
+  color: var(--md-sys-color-primary);
+  background: color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent);
+  border-radius: 3px;
+  padding: 1px 0;
+}

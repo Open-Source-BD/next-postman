@@ -11,6 +11,12 @@ interface VarInputProps {
   'aria-label'?: string;
 }
 
+/** Render text with `{{var}}` tokens wrapped in colored spans (HTML-escaped). */
+function highlight(text: string): string {
+  const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return esc.replace(/\{\{([^{}]*)\}\}/g, '<span class="tok-var">{{$1}}</span>');
+}
+
 /** Find an open `{{partial` token immediately before the caret (no closing `}}`). */
 function openToken(text: string, caret: number): { start: number; partial: string } | null {
   const before = text.slice(0, caret);
@@ -34,7 +40,12 @@ export function VarInput({ value, onValueChange, className, placeholder, spellCh
   const activeEnvId = useApiStore((s) => s.activeEnvId);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const caretToRestore = useRef<number | null>(null);
+
+  const syncScroll = () => {
+    if (backdropRef.current && inputRef.current) backdropRef.current.scrollLeft = inputRef.current.scrollLeft;
+  };
   const [matches, setMatches] = useState<string[]>([]);
   const [tokenStart, setTokenStart] = useState<number | null>(null);
   const [sel, setSel] = useState(0);
@@ -82,15 +93,22 @@ export function VarInput({ value, onValueChange, className, placeholder, spellCh
 
   return (
     <div className="var-input-wrap">
+      <div
+        ref={backdropRef}
+        className={`var-input-backdrop ${className ?? ''}`}
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{ __html: highlight(value) || '&#8203;' }}
+      />
       <input
         ref={inputRef}
-        className={className}
+        className={`var-input-field ${className ?? ''}`}
         value={value}
         placeholder={placeholder}
         spellCheck={spellCheck}
         aria-label={rest['aria-label']}
-        onChange={(e) => { onValueChange(e.target.value); recompute(e.target.value, e.target.selectionStart ?? e.target.value.length); }}
-        onKeyUp={(e) => { if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') recompute(value, e.currentTarget.selectionStart ?? value.length); }}
+        onChange={(e) => { onValueChange(e.target.value); recompute(e.target.value, e.target.selectionStart ?? e.target.value.length); syncScroll(); }}
+        onScroll={syncScroll}
+        onKeyUp={(e) => { syncScroll(); if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') recompute(value, e.currentTarget.selectionStart ?? value.length); }}
         onKeyDown={onKeyDown}
         onBlur={() => setTimeout(() => { setTokenStart(null); setMatches([]); }, 120)}
       />
