@@ -26,7 +26,16 @@ export interface WorkspaceData {
 const COLLECTIONS_DIR = 'collections';
 const ENV_DIR = 'environments';
 const GLOBALS_FILE = `${ENV_DIR}/_globals.json`;
+const GLOBALS_SECRET_FILE = `${ENV_DIR}/_globals.secret.json`;
 const GITIGNORE = '.gitignore';
+
+/** Heuristic: does this variable key hold a secret that must stay out of git? */
+const SECRET_RE = /(token|secret|password|passwd|pwd|api[-_]?key|apikey|auth|bearer|credential)/i;
+const isSecret = (key: string): boolean => SECRET_RE.test(key);
+const splitVars = (vars: EnvVar[]) => ({
+  safe: vars.filter((v) => !isSecret(v.key)),
+  secret: vars.filter((v) => isSecret(v.key)),
+});
 
 /** Filesystem-safe segment. Order/identity never depend on this (id is in content). */
 function sanitize(name: string): string {
@@ -73,13 +82,20 @@ export function serializeWorkspace(data: WorkspaceData): FileEntry[] {
     serializeNodes(col.children, dir, out);
   });
 
+  // Environments: non-secret vars in the versioned file, secrets in a sibling
+  // *.secret.json (gitignored) so tokens never land in committed history.
   data.environments.forEach((env, ei) => {
-    out.push({
-      path: `${ENV_DIR}/${pad(ei)}__${sanitize(env.name)}.json`,
-      content: JSON.stringify({ id: env.id, name: env.name, vars: env.vars }, null, 2),
-    });
+    const { safe, secret } = splitVars(env.vars);
+    const stem = `${ENV_DIR}/${pad(ei)}__${sanitize(env.name)}`;
+    out.push({ path: `${stem}.json`, content: JSON.stringify({ id: env.id, name: env.name, vars: safe }, null, 2) });
+    if (secret.length) {
+      out.push({ path: `${stem}.secret.json`, content: JSON.stringify({ id: env.id, vars: secret }, null, 2) });
+    }
   });
-  out.push({ path: GLOBALS_FILE, content: JSON.stringify(data.globals, null, 2) });
+
+  const g = splitVars(data.globals);
+  out.push({ path: GLOBALS_FILE, content: JSON.stringify(g.safe, null, 2) });
+  if (g.secret.length) out.push({ path: GLOBALS_SECRET_FILE, content: JSON.stringify(g.secret, null, 2) });
 
   out.push({
     path: GITIGNORE,
@@ -130,8 +146,9 @@ function buildNodes(dir: DirNode): TreeNode[] {
 
 export function deserializeWorkspace(entries: FileEntry[]): WorkspaceData {
   const collectionsRoot = new Map<string, DirNode>(); // collection dir name → DirNode
-  const environments: Environment[] = [];
-  let globals: EnvVar[] = [];
+  const envMap = new Map<string, Environment>(); // env id → merged env (safe + secret)
+  let globalsSafe: EnvVar[] = [];
+  let globalsSecret: EnvVar[] = [];
 
   // First pass: index everything into a dir tree.
   for (const entry of entries) {
@@ -140,12 +157,22 @@ export function deserializeWorkspace(entries: FileEntry[]): WorkspaceData {
 
     if (entry.path === GLOBALS_FILE) {
       const parsed = safeParse(entry.content);
-      if (Array.isArray(parsed)) globals = parsed as EnvVar[];
+      if (Array.isArray(parsed)) globalsSafe = parsed as EnvVar[];
+      continue;
+    }
+    if (entry.path === GLOBALS_SECRET_FILE) {
+      const parsed = safeParse(entry.content);
+      if (Array.isArray(parsed)) globalsSecret = parsed as EnvVar[];
       continue;
     }
     if (top === ENV_DIR) {
-      const parsed = safeParse(entry.content);
-      if (parsed && typeof parsed === 'object') environments.push(parsed as Environment);
+      const parsed = safeParse(entry.content) as { id?: string; name?: string; vars?: EnvVar[] } | null;
+      if (parsed && typeof parsed === 'object' && parsed.id) {
+        const ex = envMap.get(parsed.id) ?? { id: parsed.id, name: parsed.name ?? 'Environment', vars: [] };
+        if (parsed.name) ex.name = parsed.name;
+        if (Array.isArray(parsed.vars)) ex.vars = [...ex.vars, ...parsed.vars];
+        envMap.set(parsed.id, ex);
+      }
       continue;
     }
     if (top !== COLLECTIONS_DIR || parts.length < 2) continue;
@@ -187,6 +214,6 @@ export function deserializeWorkspace(entries: FileEntry[]): WorkspaceData {
     }))
     .filter((c) => c.id);
 
-  environments.sort((a, b) => a.name.localeCompare(b.name));
-  return { collections, environments, globals };
+  const environments = [...envMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+  return { collections, environments, globals: [...globalsSafe, ...globalsSecret] };
 }

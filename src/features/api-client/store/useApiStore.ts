@@ -1,14 +1,36 @@
 import { create } from 'zustand';
-import type { Collection, EnvVar, Environment, HistoryItem, SidebarTab, TabState } from '../types';
+import type { Collection, EnvVar, Environment, HistoryItem, SidebarTab, TabState, TreeNode } from '../types';
 import type { CodeLang } from '../lib/codegen';
 import { generateId } from '../lib/id';
 import * as tree from '../lib/collectionTree';
 import { isTabDirty } from '../lib/tabDirty';
 import { runCollection, type RunResultItem } from '../lib/collectionRunner';
 import { parseData } from '../lib/parseData';
+import { serializeWorkspace, deserializeWorkspace } from '../lib/workspaceFile';
+import {
+  isFsSupported, pickWorkspaceDir, saveHandle, loadHandle, clearHandle,
+  ensurePermission, writeWorkspace, readWorkspace, type WorkspaceHandle,
+} from '../lib/workspaceFs';
 
 /** Live AbortController for an in-flight collection run (not serializable → not in state). */
 let runAbort: AbortController | null = null;
+/** Connected workspace directory handle (not serializable → not in state). */
+let wsHandle: WorkspaceHandle | null = null;
+
+export type WorkspaceStatus = 'disconnected' | 'connected' | 'reconnect' | 'unsupported';
+
+const FILE_BODY_WARNED_KEY = 'next-postman-file-body-warned';
+
+/** Any request in the tree carrying a live form-data file (lost on serialize). */
+function anyFileBody(cols: Collection[]): boolean {
+  const walk = (nodes: TreeNode[]): boolean =>
+    nodes.some((n) =>
+      n.type === 'folder'
+        ? walk(n.children)
+        : n.request.body.formdata.some((f) => f.type === 'file' && f.file)
+    );
+  return cols.some((c) => walk(c.children));
+}
 
 /** Accept either the new Environment[] shape or a legacy flat EnvVar[]. */
 function migrateEnvironments(raw: unknown): Environment[] {
@@ -92,6 +114,11 @@ interface ApiState {
   runnerProgress: { current: number; total: number };
   runnerResults: RunResultItem[];
   runnerError: string | null;
+  /** Git-native workspace (File System Access). */
+  workspaceStatus: WorkspaceStatus;
+  workspaceName: string;
+  workspaceBusy: boolean;
+  workspaceError: string | null;
   /** Tab pending close-confirm (dirty). null = no modal. */
   closingTabId: string | null;
   moveNodeId: string | null;
@@ -178,6 +205,13 @@ interface ApiState {
   closeRunner: () => void;
   startRun: (opts: { iterations: number; dataText: string }) => Promise<void>;
   cancelRun: () => void;
+  // Workspace (git-native storage)
+  restoreWorkspace: () => Promise<void>;
+  connectWorkspace: () => Promise<void>;
+  reconnectWorkspace: () => Promise<void>;
+  saveToWorkspace: () => Promise<void>;
+  loadFromWorkspace: () => Promise<void>;
+  disconnectWorkspace: () => Promise<void>;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
   setCodeLang: (v: CodeLang) => void;
@@ -213,6 +247,10 @@ export const useApiStore = create<ApiState>((set, get) => ({
   runnerProgress: { current: 0, total: 0 },
   runnerResults: [],
   runnerError: null,
+  workspaceStatus: 'disconnected',
+  workspaceName: '',
+  workspaceBusy: false,
+  workspaceError: null,
   closingTabId: null,
   moveNodeId: null,
   pendingSave: null,
@@ -561,6 +599,109 @@ export const useApiStore = create<ApiState>((set, get) => ({
     runAbort?.abort();
     runAbort = null;
     set({ runnerRunning: false });
+  },
+
+  // --- Workspace (git-native File System Access) ---
+
+  restoreWorkspace: async () => {
+    if (!isFsSupported()) {
+      set({ workspaceStatus: 'unsupported' });
+      return;
+    }
+    try {
+      const handle = await loadHandle();
+      if (handle) {
+        wsHandle = handle;
+        // Browsers drop permission on reload → require an explicit reconnect.
+        set({ workspaceStatus: 'reconnect', workspaceName: handle.name });
+      }
+    } catch {
+      // no stored handle / IDB unavailable — stay disconnected
+    }
+  },
+
+  connectWorkspace: async () => {
+    if (!isFsSupported()) {
+      set({ workspaceStatus: 'unsupported' });
+      return;
+    }
+    set({ workspaceBusy: true, workspaceError: null });
+    try {
+      const handle = await pickWorkspaceDir();
+      wsHandle = handle;
+      await saveHandle(handle);
+      set({ workspaceStatus: 'connected', workspaceName: handle.name });
+      await get().saveToWorkspace();
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') set({ workspaceError: (e as Error).message });
+    } finally {
+      set({ workspaceBusy: false });
+    }
+  },
+
+  reconnectWorkspace: async () => {
+    if (!wsHandle) return;
+    set({ workspaceBusy: true, workspaceError: null });
+    try {
+      const ok = await ensurePermission(wsHandle);
+      set({ workspaceStatus: ok ? 'connected' : 'reconnect', workspaceError: ok ? null : 'Permission denied' });
+    } finally {
+      set({ workspaceBusy: false });
+    }
+  },
+
+  saveToWorkspace: async () => {
+    if (!wsHandle) return;
+    set({ workspaceBusy: true, workspaceError: null });
+    try {
+      if (!(await ensurePermission(wsHandle))) {
+        set({ workspaceStatus: 'reconnect', workspaceError: 'Folder permission needed' });
+        return;
+      }
+      const { collections, environments, globals } = get();
+      // One-time heads-up: file attachments can't be written to disk.
+      if (typeof localStorage !== 'undefined' && !localStorage.getItem(FILE_BODY_WARNED_KEY) && anyFileBody(collections)) {
+        localStorage.setItem(FILE_BODY_WARNED_KEY, '1');
+        alert('Heads up: file attachments in form-data bodies are not written to the folder (the file itself can’t be serialized). Everything else is saved — re-attach files after loading elsewhere.');
+      }
+      await writeWorkspace(wsHandle, serializeWorkspace({ collections, environments, globals }));
+      set({ workspaceStatus: 'connected' });
+    } catch (e) {
+      set({ workspaceError: (e as Error).message });
+    } finally {
+      set({ workspaceBusy: false });
+    }
+  },
+
+  loadFromWorkspace: async () => {
+    if (!wsHandle) return;
+    set({ workspaceBusy: true, workspaceError: null });
+    try {
+      if (!(await ensurePermission(wsHandle))) {
+        set({ workspaceStatus: 'reconnect', workspaceError: 'Folder permission needed' });
+        return;
+      }
+      const data = deserializeWorkspace(await readWorkspace(wsHandle));
+      const expanded = { ...get().expanded };
+      data.collections.forEach((c) => { expanded[c.id] = true; });
+      set({
+        collections: data.collections,
+        environments: data.environments,
+        globals: data.globals,
+        expanded,
+        workspaceStatus: 'connected',
+      });
+    } catch (e) {
+      set({ workspaceError: (e as Error).message });
+    } finally {
+      set({ workspaceBusy: false });
+    }
+  },
+
+  disconnectWorkspace: async () => {
+    await clearHandle();
+    wsHandle = null;
+    set({ workspaceStatus: 'disconnected', workspaceName: '', workspaceError: null });
   },
 
   setSaveModalOpen: (isSaveModalOpen) => set({ isSaveModalOpen }),

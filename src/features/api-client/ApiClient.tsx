@@ -29,6 +29,11 @@ export function ApiClient() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  // Reconnect a previously-granted workspace folder (permission is re-queried).
+  useEffect(() => {
+    useApiStore.getState().restoreWorkspace();
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const splitRef = useRef<HTMLDivElement>(null);
   const [requestHeight, setRequestHeight] = useState(340);

@@ -73,6 +73,29 @@ describe('workspaceFile', () => {
     expect(fd.file).toBeNull();
   });
 
+  it('splits secret-named vars into gitignored *.secret.json, not the versioned file', () => {
+    const data = sample();
+    data.environments[0].vars.push({ id: 'v2', key: 'authToken', value: 'SECRET123' });
+    const files = serializeWorkspace(data);
+
+    const prodMain = files.find((f) => f.path === 'environments/000__Prod.json')!;
+    const prodSecret = files.find((f) => f.path === 'environments/000__Prod.secret.json')!;
+    const globalsSecret = files.find((f) => f.path === 'environments/_globals.secret.json')!;
+
+    // baseUrl stays versioned; authToken does not appear in the committed file
+    expect(prodMain.content).toContain('baseUrl');
+    expect(prodMain.content).not.toContain('SECRET123');
+    expect(prodSecret.content).toContain('SECRET123');
+    // global apiKey is secret-named → goes to the secret file
+    expect(globalsSecret.content).toContain('KKK');
+    expect(files.find((f) => f.path === 'environments/_globals.json')!.content).not.toContain('KKK');
+
+    // round-trip still reunites them
+    const back = deserializeWorkspace(files);
+    expect(back.environments[0].vars.find((v) => v.key === 'authToken')?.value).toBe('SECRET123');
+    expect(back.globals.find((v) => v.key === 'apiKey')?.value).toBe('KKK');
+  });
+
   it('returns empty workspace for empty input without throwing', () => {
     expect(deserializeWorkspace([])).toEqual({ collections: [], environments: [], globals: [] });
   });

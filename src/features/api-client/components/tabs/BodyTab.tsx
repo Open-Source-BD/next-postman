@@ -56,11 +56,19 @@ export function BodyTab() {
         </div>
       )}
       {body.type === 'formdata' && (
-        <KvEditor
-          items={body.formdata}
-          allowFile
-          onChange={(formdata) => updateActiveTab({ body: { ...body, formdata } })}
-        />
+        <>
+          {body.formdata.some((item) => item.type === 'file' && item.file) && (
+            <div className="body-file-note" title="File attachments live only in this session — they are not written to disk, git, or shared/exported collections.">
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>info</span>
+              Attached files aren&apos;t saved to disk or git — re-attach after reload or on another machine.
+            </div>
+          )}
+          <KvEditor
+            items={body.formdata}
+            allowFile
+            onChange={(formdata) => updateActiveTab({ body: { ...body, formdata } })}
+          />
+        </>
       )}
       {body.type === 'urlencoded' && (
         <KvEditor

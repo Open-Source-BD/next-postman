@@ -1,5 +1,6 @@
 'use client';
 import { useApiStore } from '../store/useApiStore';
+import { WorkspaceChip } from './WorkspaceChip';
 
 export function TopBar() {
   const setEnvModalOpen = useApiStore((s) => s.setEnvModalOpen);
@@ -19,6 +20,7 @@ export function TopBar() {
         <span>API Client</span>
       </div>
       <div className="top-bar-actions">
+        <WorkspaceChip />
         <button className="md-icon-btn-small" onClick={toggleTheme} title="Toggle theme">
           <span className="material-symbols-outlined">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
         </button>
