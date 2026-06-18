@@ -199,6 +199,7 @@ function buildMenuItems(target: MenuTarget, setEditingId: (id: string) => void):
 
   if (target.kind === 'folder') {
     return [
+      { label: 'Run', icon: 'play_arrow', onClick: () => s.openRunner(target.id) },
       { label: 'Add Request', icon: 'add', onClick: () => s.addRequest(target.id) },
       { label: 'New Folder', icon: 'create_new_folder', onClick: () => s.createFolder(target.id, 'New Folder') },
       { label: 'Rename', icon: 'edit', onClick: rename },
@@ -211,6 +212,7 @@ function buildMenuItems(target: MenuTarget, setEditingId: (id: string) => void):
   // collection
   const col = s.collections.find((c) => c.id === target.id);
   return [
+    { label: 'Run', icon: 'play_arrow', onClick: () => s.openRunner(target.id) },
     { label: 'Add Request', icon: 'add', onClick: () => s.addRequest(target.id) },
     { label: 'New Folder', icon: 'create_new_folder', onClick: () => s.createFolder(target.id, 'New Folder') },
     { label: 'Rename', icon: 'edit', onClick: rename },

@@ -4,6 +4,11 @@ import type { CodeLang } from '../lib/codegen';
 import { generateId } from '../lib/id';
 import * as tree from '../lib/collectionTree';
 import { isTabDirty } from '../lib/tabDirty';
+import { runCollection, type RunResultItem } from '../lib/collectionRunner';
+import { parseData } from '../lib/parseData';
+
+/** Live AbortController for an in-flight collection run (not serializable → not in state). */
+let runAbort: AbortController | null = null;
 
 /** Accept either the new Environment[] shape or a legacy flat EnvVar[]. */
 function migrateEnvironments(raw: unknown): Environment[] {
@@ -81,6 +86,12 @@ interface ApiState {
   isMoveModalOpen: boolean;
   isCurlModalOpen: boolean;
   isResponseModalOpen: boolean;
+  /** Collection Runner: target node id when the modal is open, else null. */
+  runnerNodeId: string | null;
+  runnerRunning: boolean;
+  runnerProgress: { current: number; total: number };
+  runnerResults: RunResultItem[];
+  runnerError: string | null;
   /** Tab pending close-confirm (dirty). null = no modal. */
   closingTabId: string | null;
   moveNodeId: string | null;
@@ -162,6 +173,11 @@ interface ApiState {
   setEnvModalOpen: (v: boolean) => void;
   setCurlModalOpen: (v: boolean) => void;
   setResponseModalOpen: (v: boolean) => void;
+  // Collection Runner
+  openRunner: (nodeId: string) => void;
+  closeRunner: () => void;
+  startRun: (opts: { iterations: number; dataText: string }) => Promise<void>;
+  cancelRun: () => void;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
   setCodeLang: (v: CodeLang) => void;
@@ -192,6 +208,11 @@ export const useApiStore = create<ApiState>((set, get) => ({
   isMoveModalOpen: false,
   isCurlModalOpen: false,
   isResponseModalOpen: false,
+  runnerNodeId: null,
+  runnerRunning: false,
+  runnerProgress: { current: 0, total: 0 },
+  runnerResults: [],
+  runnerError: null,
   closingTabId: null,
   moveNodeId: null,
   pendingSave: null,
@@ -485,6 +506,63 @@ export const useApiStore = create<ApiState>((set, get) => ({
   setEnvModalOpen: (isEnvModalOpen) => set({ isEnvModalOpen }),
   setCurlModalOpen: (isCurlModalOpen) => set({ isCurlModalOpen }),
   setResponseModalOpen: (isResponseModalOpen) => set({ isResponseModalOpen }),
+
+  // --- Collection Runner ---
+
+  openRunner: (runnerNodeId) =>
+    set({ runnerNodeId, runnerRunning: false, runnerResults: [], runnerProgress: { current: 0, total: 0 }, runnerError: null }),
+
+  closeRunner: () => {
+    runAbort?.abort();
+    runAbort = null;
+    set({ runnerNodeId: null, runnerRunning: false });
+  },
+
+  startRun: async ({ iterations, dataText }) => {
+    const state = get();
+    const nodeId = state.runnerNodeId;
+    if (!nodeId || state.runnerRunning) return;
+
+    const requests = tree.listRequests(state.collections, nodeId);
+    if (requests.length === 0) {
+      set({ runnerError: null, runnerResults: [], runnerProgress: { current: 0, total: 0 } });
+      return;
+    }
+
+    let dataRows: Record<string, string>[] = [];
+    if (dataText.trim()) {
+      try {
+        dataRows = parseData(dataText);
+      } catch (e) {
+        set({ runnerError: (e as Error).message });
+        return;
+      }
+    }
+
+    const seedVars = selectActiveVars(state);
+    runAbort = new AbortController();
+    set({ runnerRunning: true, runnerResults: [], runnerProgress: { current: 0, total: 0 }, runnerError: null });
+
+    await runCollection({
+      requests,
+      seedVars,
+      iterations,
+      dataRows,
+      signal: runAbort.signal,
+      onResult: (item) => set((s) => ({ runnerResults: [...s.runnerResults, item] })),
+      onProgress: (current, total) => set({ runnerProgress: { current, total } }),
+    });
+
+    runAbort = null;
+    set({ runnerRunning: false });
+  },
+
+  cancelRun: () => {
+    runAbort?.abort();
+    runAbort = null;
+    set({ runnerRunning: false });
+  },
+
   setSaveModalOpen: (isSaveModalOpen) => set({ isSaveModalOpen }),
   setCodeModalOpen: (isCodeModalOpen) => set({ isCodeModalOpen }),
   setCodeLang: (codeLang) => set({ codeLang }),

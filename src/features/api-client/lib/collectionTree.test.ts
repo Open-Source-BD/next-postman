@@ -5,6 +5,7 @@ import {
   insertNode,
   isDescendant,
   listContainers,
+  listRequests,
   makeFolder,
   makeRequest,
   migrateCollections,
@@ -53,6 +54,13 @@ describe('collectionTree', () => {
     expect(findNode(sample(), 'req1')?.name).toBe('Login');
     expect(findNode(sample(), 'f1')?.type).toBe('folder');
     expect(findNode(sample(), 'nope')).toBeNull();
+  });
+
+  it('lists requests under a collection, folder, or single request (depth-first)', () => {
+    expect(listRequests(sample(), 'c1').map((r) => r.name)).toEqual(['Login', 'Health']);
+    expect(listRequests(sample(), 'f1').map((r) => r.name)).toEqual(['Login']);
+    expect(listRequests(sample(), 'req2').map((r) => r.name)).toEqual(['Health']);
+    expect(listRequests(sample(), 'nope')).toEqual([]);
   });
 
   it('inserts into a collection root and a folder', () => {

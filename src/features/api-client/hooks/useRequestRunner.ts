@@ -1,8 +1,7 @@
 'use client';
 import { useCallback } from 'react';
 import { selectActiveTab, selectActiveVars, useApiStore } from '../store/useApiStore';
-import { PmSandbox } from '../lib/pmSandbox';
-import { sendViaProxy } from '../lib/proxyClient';
+import { executeRequest } from '../lib/executeRequest';
 import { resolveEnv } from '../lib/envResolver';
 import { generateId } from '../lib/id';
 import type { TabState } from '../types';
@@ -17,15 +16,6 @@ export function useRequestRunner(): () => Promise<void> {
     state.setIsLoading(true);
 
     const vars = selectActiveVars(state);
-    const sandbox = new PmSandbox(vars, state.setEnvVar);
-
-    try {
-      sandbox.runPreRequest(tab.scripts);
-    } catch (e) {
-      alert('Pre-request Script Error:\n' + (e as Error).message);
-      state.setIsLoading(false);
-      return;
-    }
 
     // Persist a protocol back into the visible URL when one is missing.
     const resolved = resolveEnv(tab.url, vars).trim();
@@ -33,27 +23,16 @@ export function useRequestRunner(): () => Promise<void> {
       state.updateActiveTab({ url: 'http://' + resolved });
     }
 
-    try {
-      const { finalUrl, ...resData } = await sendViaProxy(tab, vars);
+    // Single-send persists script var writes to the active env (via setEnvVar).
+    const result = await executeRequest(tab, vars, { onSetVar: state.setEnvVar });
 
-      sandbox.attachResponse(resData.status, resData.statusText, resData.rawText);
-      sandbox.runTests(tab.tests);
+    if (result.error?.phase === 'pre-request') {
+      alert('Pre-request Script Error:\n' + result.error.message);
+      state.setIsLoading(false);
+      return;
+    }
 
-      state.updateActiveTab({
-        response: { ...resData, testResults: sandbox.testResults },
-        activeResTab: 'body',
-      });
-      const snapshot: TabState = { ...JSON.parse(JSON.stringify(tab)), response: null, sourceNodeId: undefined };
-      state.addHistory({
-        id: generateId(),
-        method: tab.method,
-        url: finalUrl,
-        status: resData.status,
-        time: resData.timeTaken,
-        date: new Date().toISOString(),
-        request: snapshot,
-      });
-    } catch (error) {
+    if (result.error || !result.response) {
       state.updateActiveTab({
         response: {
           ok: false,
@@ -61,14 +40,27 @@ export function useRequestRunner(): () => Promise<void> {
           statusText: 'Proxy Error',
           timeTaken: 0,
           size: 0,
-          rawText: (error as Error).message,
+          rawText: result.error?.message ?? 'Request failed',
           headers: {},
           testResults: [],
         },
         activeResTab: 'body',
       });
-    } finally {
       state.setIsLoading(false);
+      return;
     }
+
+    state.updateActiveTab({ response: result.response, activeResTab: 'body' });
+    const snapshot: TabState = { ...JSON.parse(JSON.stringify(tab)), response: null, sourceNodeId: undefined };
+    state.addHistory({
+      id: generateId(),
+      method: tab.method,
+      url: result.finalUrl ?? tab.url,
+      status: result.response.status,
+      time: result.response.timeTaken,
+      date: new Date().toISOString(),
+      request: snapshot,
+    });
+    state.setIsLoading(false);
   }, []);
 }

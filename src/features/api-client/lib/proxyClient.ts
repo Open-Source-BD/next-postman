@@ -27,7 +27,8 @@ export function normalizeUrl(url: string): string {
  */
 export async function sendViaProxy(
   tab: TabState,
-  environments: EnvVar[]
+  environments: EnvVar[],
+  signal?: AbortSignal
 ): Promise<ProxyResult> {
   const r = (s: string) => resolveEnv(s, environments);
 
@@ -101,6 +102,7 @@ export async function sendViaProxy(
     method: 'POST',
     headers: proxyHeaders,
     body: fetchBody,
+    signal,
   });
 
   const rawText = await response.text();

@@ -158,6 +158,30 @@ function dupInNodes(nodes: TreeNode[], id: string): TreeNode[] {
   return out;
 }
 
+// --- Request listing (Collection Runner) ---
+
+/** Depth-first list of every request inside a node list, preserving order. */
+function flattenRequests(nodes: TreeNode[]): RequestNode[] {
+  const out: RequestNode[] = [];
+  for (const n of nodes) {
+    if (n.type === 'request') out.push(n);
+    else out.push(...flattenRequests(n.children));
+  }
+  return out;
+}
+
+/**
+ * Ordered requests under a target id, which may be a collection root, a folder,
+ * or a single request. Returns [] if the id is not found.
+ */
+export function listRequests(cols: Collection[], id: string): RequestNode[] {
+  const col = findCollection(cols, id);
+  if (col) return flattenRequests(col.children);
+  const node = findNode(cols, id);
+  if (!node) return [];
+  return node.type === 'request' ? [node] : flattenRequests(node.children);
+}
+
 // --- Drop-target listing (collections + folders only) ---
 
 export interface ContainerEntry {

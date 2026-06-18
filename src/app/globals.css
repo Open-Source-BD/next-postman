@@ -1070,3 +1070,83 @@ body {
   max-height: 70vh;
   overflow-y: auto;
 }
+
+/* --- Collection Runner --- */
+.md-modal.runner-modal { width: 640px; max-width: 94vw; }
+.runner-body { display: flex; flex-direction: column; gap: 12px; }
+.runner-config { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.runner-target {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 500; flex: 1; min-width: 0;
+}
+.runner-target-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.runner-target-count {
+  font-size: 12px; color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-high);
+  padding: 1px 8px; border-radius: 10px; flex: none;
+}
+.runner-iter {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--md-sys-color-on-surface-variant);
+}
+.runner-data-toggle { display: inline-flex; align-items: center; gap: 4px; }
+.runner-run, .runner-cancel {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 8px 16px; border-radius: 8px; border: none;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.runner-run { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.runner-run:disabled { opacity: 0.5; cursor: not-allowed; }
+.runner-cancel { background: var(--md-sys-color-error); color: var(--md-sys-color-on-error, #fff); }
+.runner-data { width: 100%; font-family: var(--mono-font); font-size: 12px; resize: vertical; }
+.runner-error {
+  background: color-mix(in srgb, var(--md-sys-color-error) 12%, transparent);
+  color: var(--md-sys-color-error);
+  padding: 8px 12px; border-radius: 8px; font-size: 13px;
+}
+.runner-progress-track {
+  height: 6px; border-radius: 3px; overflow: hidden;
+  background: var(--md-sys-color-surface-container-high);
+}
+.runner-progress-bar {
+  height: 100%; background: var(--md-sys-color-primary);
+  transition: width 0.15s ease;
+}
+.runner-progress-label {
+  margin-top: 4px; font-size: 12px; color: var(--md-sys-color-on-surface-variant);
+}
+.runner-summary {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-radius: 8px; font-size: 14px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+.runner-summary.all-pass { border-color: var(--success); }
+.runner-summary.has-fail { border-color: var(--md-sys-color-error); }
+.runner-summary-time { color: var(--md-sys-color-on-surface-variant); font-size: 12px; }
+.runner-report {
+  display: flex; flex-direction: column;
+  max-height: 42vh; overflow-y: auto;
+  border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;
+}
+.runner-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 32px 16px; text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.runner-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; font-size: 13px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.runner-row:last-child { border-bottom: none; }
+.runner-row-icon { font-size: 18px; flex: none; }
+.runner-row-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.runner-row-iter { font-size: 11px; color: var(--md-sys-color-on-surface-variant); flex: none; }
+.runner-row-status, .runner-row-time, .runner-row-tests {
+  font-family: var(--mono-font); font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant); flex: none;
+}
+.runner-row-error {
+  flex-basis: 100%; font-size: 11px; color: var(--md-sys-color-error);
+  font-family: var(--mono-font); padding-left: 26px;
+}

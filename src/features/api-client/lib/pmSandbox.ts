@@ -12,6 +12,10 @@ export interface Pm {
     set: (key: string, value: string) => void;
     get: (key: string) => string | undefined;
   };
+  /** Read-only access to the current iteration's data row (Collection Runner). */
+  iterationData: {
+    get: (key: string) => string | undefined;
+  };
   variables: Record<string, string>;
   test: (name: string, fn: () => void) => void;
   expect: (val: unknown) => {
@@ -30,11 +34,21 @@ export interface Pm {
 export class PmSandbox {
   readonly testResults: TestResult[] = [];
   readonly pm: Pm;
+  /** Live variable map: env/globals seed, iteration data on top, plus script writes. */
+  private readonly envMap: Record<string, string> = {};
 
-  constructor(environments: EnvVar[], onEnvSet: (key: string, value: string) => void) {
-    const envMap: Record<string, string> = {};
+  constructor(
+    environments: EnvVar[],
+    onEnvSet: (key: string, value: string) => void,
+    iterationData: Record<string, string> = {}
+  ) {
+    const envMap = this.envMap;
     environments.forEach((e) => {
       if (e.key) envMap[e.key] = e.value;
+    });
+    // Iteration data overrides env/globals for the current run row.
+    Object.entries(iterationData).forEach(([k, v]) => {
+      envMap[k] = v;
     });
 
     this.pm = {
@@ -44,6 +58,9 @@ export class PmSandbox {
           onEnvSet(k, v);
         },
         get: (k) => envMap[k],
+      },
+      iterationData: {
+        get: (k) => iterationData[k],
       },
       variables: envMap,
       test: (name, fn) => {
@@ -70,6 +87,15 @@ export class PmSandbox {
         },
       }),
     };
+  }
+
+  /**
+   * Current variable list (env/globals + iteration data + script writes), as an
+   * EnvVar[] for `resolveEnv`. Read AFTER `runPreRequest` so pre-request script
+   * mutations reach request interpolation.
+   */
+  currentVars(): EnvVar[] {
+    return Object.entries(this.envMap).map(([key, value]) => ({ id: `v:${key}`, key, value }));
   }
 
   /** Run a pre-request script. Throws if the script throws. */

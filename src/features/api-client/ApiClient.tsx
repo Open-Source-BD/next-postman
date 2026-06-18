@@ -1,23 +1,24 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
-import { useApiStore } from './store/useApiStore';
-import { usePersistence } from './store/persist';
-import { useRequestRunner } from './hooks/useRequestRunner';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { exportData, parseImportFile } from './lib/importExport';
-import { Sidebar } from './components/Sidebar';
-import { TopBar } from './components/TopBar';
-import { RequestTabsBar } from './components/RequestTabsBar';
-import { RequestPane } from './components/RequestPane';
-import { ResponsePane } from './components/ResponsePane';
-import { PaneResizer } from './components/PaneResizer';
-import { EnvModal } from './components/modals/EnvModal';
-import { SaveModal } from './components/modals/SaveModal';
-import { CodeModal } from './components/modals/CodeModal';
-import { MoveToModal } from './components/modals/MoveToModal';
-import { CurlModal } from './components/modals/CurlModal';
-import { CloseTabModal } from './components/modals/CloseTabModal';
-import { ResponseModal } from './components/modals/ResponseModal';
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { PaneResizer } from "./components/PaneResizer";
+import { RequestPane } from "./components/RequestPane";
+import { RequestTabsBar } from "./components/RequestTabsBar";
+import { ResponsePane } from "./components/ResponsePane";
+import { Sidebar } from "./components/Sidebar";
+import { TopBar } from "./components/TopBar";
+import { CloseTabModal } from "./components/modals/CloseTabModal";
+import { CodeModal } from "./components/modals/CodeModal";
+import { CurlModal } from "./components/modals/CurlModal";
+import { EnvModal } from "./components/modals/EnvModal";
+import { MoveToModal } from "./components/modals/MoveToModal";
+import { ResponseModal } from "./components/modals/ResponseModal";
+import { RunnerModal } from "./components/modals/RunnerModal";
+import { SaveModal } from "./components/modals/SaveModal";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useRequestRunner } from "./hooks/useRequestRunner";
+import { exportData, parseImportFile } from "./lib/importExport";
+import { usePersistence } from "./store/persist";
+import { useApiStore } from "./store/useApiStore";
 
 export function ApiClient() {
   usePersistence();
@@ -41,7 +42,9 @@ export function ApiClient() {
   // Expand response → request small. Collapse response → request large.
   const expandResponse = () => setRequestHeight(140);
   const collapseResponse = () =>
-    setRequestHeight(Math.max(140, (splitRef.current?.clientHeight ?? 600) - 120));
+    setRequestHeight(
+      Math.max(140, (splitRef.current?.clientHeight ?? 600) - 120),
+    );
 
   const triggerImport = () => fileInputRef.current?.click();
   const onExport = () => {
@@ -57,17 +60,24 @@ export function ApiClient() {
     try {
       const { collections, environments } = await parseImportFile(file);
       useApiStore.getState().mergeImport(collections, environments);
-      alert('Import successful!');
+      alert("Import successful!");
     } catch {
-      alert('Invalid JSON file.');
+      alert("Invalid JSON file.");
     }
-    e.target.value = '';
+    e.target.value = "";
   };
 
   // Match the prior SSR-safe mount guard: render nothing meaningful until
   // localStorage has hydrated to avoid a hydration mismatch.
   if (!hydrated) {
-    return <div style={{ height: '100vh', background: 'var(--md-sys-color-background)' }} />;
+    return (
+      <div
+        style={{
+          height: "100vh",
+          background: "var(--md-sys-color-background)",
+        }}
+      />
+    );
   }
 
   return (
@@ -81,7 +91,10 @@ export function ApiClient() {
             <RequestPane send={send} />
           </div>
           <PaneResizer onDrag={resizeRequestPane} />
-          <ResponsePane onExpand={expandResponse} onCollapse={collapseResponse} />
+          <ResponsePane
+            onExpand={expandResponse}
+            onCollapse={collapseResponse}
+          />
         </div>
       </main>
 
@@ -89,7 +102,7 @@ export function ApiClient() {
         type="file"
         ref={fileInputRef}
         accept=".json"
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
         onChange={handleImport}
       />
 
@@ -100,6 +113,7 @@ export function ApiClient() {
       <CurlModal />
       <CloseTabModal />
       <ResponseModal />
+      <RunnerModal />
     </div>
   );
 }

@@ -37,6 +37,21 @@ describe('PmSandbox', () => {
     expect(sandbox.testResults[2]).toMatchObject({ name: 'json parsed', pass: true });
   });
 
+  it('exposes iteration data and seeds it into currentVars (overriding env)', () => {
+    const sandbox = new PmSandbox(env, () => {}, { base: 'override', n: '2' });
+    expect(sandbox.pm.iterationData.get('n')).toBe('2');
+    expect(sandbox.pm.iterationData.get('missing')).toBeUndefined();
+    const vars = sandbox.currentVars();
+    expect(vars.find((v) => v.key === 'base')?.value).toBe('override');
+    expect(vars.find((v) => v.key === 'n')?.value).toBe('2');
+  });
+
+  it('currentVars reflects pre-request script writes', () => {
+    const sandbox = new PmSandbox(env, () => {});
+    sandbox.runPreRequest('pm.environment.set("token", "T9")');
+    expect(sandbox.currentVars().find((v) => v.key === 'token')?.value).toBe('T9');
+  });
+
   it('captures a thrown test-script error as Script Error', () => {
     const sandbox = new PmSandbox(env, () => {});
     sandbox.attachResponse(500, 'Error', 'oops');
