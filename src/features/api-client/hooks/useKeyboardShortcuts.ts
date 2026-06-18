@@ -23,6 +23,9 @@ export function useKeyboardShortcuts({ send, triggerImport }: Options): void {
       if (e.key === 'Enter') {
         e.preventDefault();
         send();
+      } else if (key === 'k') {
+        e.preventDefault();
+        s.setCommandPaletteOpen(!s.isCommandPaletteOpen);
       } else if (key === 's') {
         e.preventDefault();
         s.saveActiveRequest();

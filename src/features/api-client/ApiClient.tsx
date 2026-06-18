@@ -13,6 +13,7 @@ import { EnvModal } from "./components/modals/EnvModal";
 import { MoveToModal } from "./components/modals/MoveToModal";
 import { ResponseModal } from "./components/modals/ResponseModal";
 import { RunnerModal } from "./components/modals/RunnerModal";
+import { CommandPalette } from "./components/CommandPalette";
 import { SaveModal } from "./components/modals/SaveModal";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useRequestRunner } from "./hooks/useRequestRunner";
@@ -119,6 +120,7 @@ export function ApiClient() {
       <CloseTabModal />
       <ResponseModal />
       <RunnerModal />
+      <CommandPalette />
     </div>
   );
 }

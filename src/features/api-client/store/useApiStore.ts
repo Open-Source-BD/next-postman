@@ -119,6 +119,8 @@ interface ApiState {
   workspaceName: string;
   workspaceBusy: boolean;
   workspaceError: string | null;
+  /** Cmd/Ctrl-K command palette. */
+  isCommandPaletteOpen: boolean;
   /** Tab pending close-confirm (dirty). null = no modal. */
   closingTabId: string | null;
   moveNodeId: string | null;
@@ -212,6 +214,7 @@ interface ApiState {
   saveToWorkspace: () => Promise<void>;
   loadFromWorkspace: () => Promise<void>;
   disconnectWorkspace: () => Promise<void>;
+  setCommandPaletteOpen: (v: boolean) => void;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
   setCodeLang: (v: CodeLang) => void;
@@ -251,6 +254,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
   workspaceName: '',
   workspaceBusy: false,
   workspaceError: null,
+  isCommandPaletteOpen: false,
   closingTabId: null,
   moveNodeId: null,
   pendingSave: null,
@@ -704,6 +708,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
     set({ workspaceStatus: 'disconnected', workspaceName: '', workspaceError: null });
   },
 
+  setCommandPaletteOpen: (isCommandPaletteOpen) => set({ isCommandPaletteOpen }),
   setSaveModalOpen: (isSaveModalOpen) => set({ isSaveModalOpen }),
   setCodeModalOpen: (isCodeModalOpen) => set({ isCodeModalOpen }),
   setCodeLang: (codeLang) => set({ codeLang }),
