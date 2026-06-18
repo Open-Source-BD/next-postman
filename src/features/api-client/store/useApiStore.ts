@@ -8,6 +8,24 @@ import { runCollection, type RunResultItem } from '../lib/collectionRunner';
 import { parseData } from '../lib/parseData';
 import { serializeWorkspace, deserializeWorkspace } from '../lib/workspaceFile';
 import { cookieHeaderFor, mergeSetCookie, type CookieJar } from '../lib/cookies';
+import { resolveEnv } from '../lib/envResolver';
+import { openWebSocket, sendWebSocket, closeConnection, byteLen } from '../lib/realtimeConnection';
+import type { Protocol, RealtimeState, RtMessage } from '../types';
+
+const RT_LOG_CAP = 500;
+const RT_MSG_MAX = 100_000;
+
+/** Append a message to a realtime log: truncate huge payloads, cap the log length. */
+function pushRtMessage(rt: RealtimeState, dir: RtMessage['dir'], text: string, bytes: number): RealtimeState {
+  const truncated = text.length > RT_MSG_MAX ? `${text.slice(0, RT_MSG_MAX)}… [truncated, ${bytes} bytes]` : text;
+  const msg: RtMessage = { id: generateId(), dir, text: truncated, bytes, ts: Date.now() };
+  const messages = [...rt.messages, msg];
+  return {
+    ...rt,
+    messages: messages.length > RT_LOG_CAP ? messages.slice(messages.length - RT_LOG_CAP) : messages,
+    total: rt.total + 1,
+  };
+}
 import {
   isFsSupported, pickWorkspaceDir, saveHandle, loadHandle, clearHandle,
   ensurePermission, writeWorkspace, readWorkspace, type WorkspaceHandle,
@@ -45,6 +63,7 @@ function migrateEnvironments(raw: unknown): Environment[] {
 export function createDefaultTab(): TabState {
   return {
     id: generateId(),
+    protocol: 'http',
     method: 'GET',
     url: '',
     params: [],
@@ -125,6 +144,8 @@ interface ApiState {
   /** Cookie jar: hostname → cookies, auto-captured and auto-attached. */
   cookieJar: CookieJar;
   isCookieModalOpen: boolean;
+  /** Live realtime (WebSocket/SSE) state per tab — NOT persisted, NOT in the dirty-check. */
+  realtime: Record<string, RealtimeState>;
   /** Tab pending close-confirm (dirty). null = no modal. */
   closingTabId: string | null;
   moveNodeId: string | null;
@@ -224,6 +245,11 @@ interface ApiState {
   setCommandPaletteOpen: (v: boolean) => void;
   captureCookies: (url: string, setCookieHeader: string | undefined) => void;
   clearCookies: (domain?: string) => void;
+  // Realtime (WebSocket; SSE in Lane B)
+  setTabProtocol: (protocol: Protocol) => void;
+  wsConnect: (tabId: string) => void;
+  wsSend: (tabId: string, text: string) => void;
+  wsDisconnect: (tabId: string) => void;
   setCookieModalOpen: (v: boolean) => void;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
@@ -267,6 +293,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
   isCommandPaletteOpen: false,
   cookieJar: {},
   isCookieModalOpen: false,
+  realtime: {},
   closingTabId: null,
   moveNodeId: null,
   pendingSave: null,
@@ -284,15 +311,23 @@ export const useApiStore = create<ApiState>((set, get) => ({
 
   closeTab: (id) => {
     const { tabs, activeTabId } = get();
+    // Tear down any live realtime connection before the tab goes away.
+    closeConnection(id);
+    const dropRt = (rt: Record<string, RealtimeState>) => {
+      if (!rt[id]) return rt;
+      const next = { ...rt };
+      delete next[id];
+      return next;
+    };
     if (tabs.length === 1) {
       const fresh = createDefaultTab();
-      set({ tabs: [fresh], activeTabId: fresh.id });
+      set((s) => ({ tabs: [fresh], activeTabId: fresh.id, realtime: dropRt(s.realtime) }));
       return;
     }
     const idx = tabs.findIndex((t) => t.id === id);
     let nextActive = activeTabId;
     if (id === activeTabId) nextActive = idx > 0 ? tabs[idx - 1].id : tabs[idx + 1].id;
-    set({ tabs: tabs.filter((t) => t.id !== id), activeTabId: nextActive });
+    set((s) => ({ tabs: tabs.filter((t) => t.id !== id), activeTabId: nextActive, realtime: dropRt(s.realtime) }));
   },
 
   requestCloseTab: (id) => {
@@ -751,6 +786,76 @@ export const useApiStore = create<ApiState>((set, get) => ({
 
   setCommandPaletteOpen: (isCommandPaletteOpen) => set({ isCommandPaletteOpen }),
   setCookieModalOpen: (isCookieModalOpen) => set({ isCookieModalOpen }),
+
+  // --- Realtime (WebSocket; SSE in Lane B) ---
+
+  setTabProtocol: (protocol) => {
+    const id = get().activeTabId;
+    closeConnection(id); // leaving/switching protocol drops any live connection
+    get().updateActiveTab({ protocol });
+    set((s) => ({ realtime: { ...s.realtime, [id]: { status: 'idle', messages: [], total: 0 } } }));
+  },
+
+  wsConnect: (tabId) => {
+    const state = get();
+    const tab = state.tabs.find((t) => t.id === tabId);
+    if (!tab) return;
+    const url = resolveEnv(tab.url, selectActiveVars(state)).trim();
+
+    const setRt = (next: Partial<RealtimeState>) =>
+      set((s) => {
+        const rt = s.realtime[tabId] ?? { status: 'idle', messages: [], total: 0 };
+        return { realtime: { ...s.realtime, [tabId]: { ...rt, ...next } } };
+      });
+
+    if (!/^wss?:\/\//i.test(url)) {
+      setRt({ status: 'error', error: 'WebSocket URL must start with ws:// or wss://' });
+      return;
+    }
+    if (typeof location !== 'undefined' && location.protocol === 'https:' && /^ws:\/\//i.test(url)) {
+      setRt({ status: 'error', error: 'Cannot open ws:// from an https page (mixed content). Use wss:// or run locally over http.' });
+      return;
+    }
+
+    // Fresh log on connect.
+    set((s) => ({ realtime: { ...s.realtime, [tabId]: { status: 'connecting', messages: [], total: 0 } } }));
+    openWebSocket(tabId, url, [], {
+      onStatus: (status, info) =>
+        set((s) => {
+          const rt = s.realtime[tabId] ?? { status: 'idle', messages: [], total: 0 };
+          return {
+            realtime: {
+              ...s.realtime,
+              [tabId]: { ...rt, status, closeInfo: info, error: status === 'error' ? info ?? 'error' : rt.error },
+            },
+          };
+        }),
+      onMessage: (dir, text, bytes) =>
+        set((s) => {
+          const rt = s.realtime[tabId];
+          if (!rt) return {};
+          return { realtime: { ...s.realtime, [tabId]: pushRtMessage(rt, dir, text, bytes) } };
+        }),
+    });
+  },
+
+  wsSend: (tabId, text) => {
+    if (!text) return;
+    if (!sendWebSocket(tabId, text)) return;
+    set((s) => {
+      const rt = s.realtime[tabId];
+      if (!rt) return {};
+      return { realtime: { ...s.realtime, [tabId]: pushRtMessage(rt, 'sent', text, byteLen(text)) } };
+    });
+  },
+
+  wsDisconnect: (tabId) => {
+    closeConnection(tabId);
+    set((s) => {
+      const rt = s.realtime[tabId] ?? { status: 'idle' as const, messages: [], total: 0 };
+      return { realtime: { ...s.realtime, [tabId]: pushRtMessage({ ...rt, status: 'closed' }, 'system', 'Disconnected', 0) } };
+    });
+  },
 
   captureCookies: (url, setCookieHeader) =>
     set((s) => ({ cookieJar: mergeSetCookie(s.cookieJar, url, setCookieHeader) })),

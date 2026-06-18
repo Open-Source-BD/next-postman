@@ -1,9 +1,13 @@
 'use client';
-import type { HttpMethod } from '../types';
+import type { HttpMethod, Protocol } from '../types';
 import { selectActiveTab, useApiStore } from '../store/useApiStore';
 import { VarInput } from './VarInput';
 
 const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+const PROTOCOLS: { value: Protocol; label: string }[] = [
+  { value: 'http', label: 'HTTP' },
+  { value: 'ws', label: 'WS' },
+];
 
 interface UrlBarProps {
   send: () => void;
@@ -17,51 +21,80 @@ export function UrlBar({ send }: UrlBarProps) {
   const saveActiveRequestAs = useApiStore((s) => s.saveActiveRequestAs);
   const isSaved = useApiStore((s) => !!selectActiveTab(s).sourceNodeId);
   const setCodeModalOpen = useApiStore((s) => s.setCodeModalOpen);
+  const setTabProtocol = useApiStore((s) => s.setTabProtocol);
+  const wsConnect = useApiStore((s) => s.wsConnect);
+  const wsDisconnect = useApiStore((s) => s.wsDisconnect);
+  const rtStatus = useApiStore((s) => s.realtime[tab.id]?.status ?? 'idle');
 
-  const openCode = () => setCodeModalOpen(true);
+  const protocol = tab.protocol ?? 'http';
+  const isWs = protocol === 'ws';
+  const wsActive = rtStatus === 'connecting' || rtStatus === 'open';
 
   return (
     <div className="url-bar-container">
       <select
         className="md-select method-select"
-        value={tab.method}
-        onChange={(e) => updateActiveTab({ method: e.target.value as HttpMethod })}
+        value={protocol}
+        onChange={(e) => setTabProtocol(e.target.value as Protocol)}
+        title="Protocol"
+        aria-label="Protocol"
       >
-        {METHODS.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
+        {PROTOCOLS.map((p) => (
+          <option key={p.value} value={p.value}>{p.label}</option>
         ))}
       </select>
+      {!isWs && (
+        <select
+          className="md-select method-select"
+          value={tab.method}
+          onChange={(e) => updateActiveTab({ method: e.target.value as HttpMethod })}
+        >
+          {METHODS.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      )}
       <VarInput
         className="md-input url-input"
         value={tab.url}
         onValueChange={(url) => updateActiveTab({ url })}
-        placeholder="https://api.example.com/v1/users/{{userId}}"
+        placeholder={isWs ? 'wss://echo.example.com/socket' : 'https://api.example.com/v1/users/{{userId}}'}
         spellCheck={false}
-        aria-label="Request URL"
+        aria-label={isWs ? 'WebSocket URL' : 'Request URL'}
       />
-      <button
-        className="md-filled-btn send-btn"
-        onClick={send}
-        disabled={isLoading}
-        title="Send Request (Cmd+Enter)"
-      >
-        <span className="material-symbols-outlined">{isLoading ? 'hourglass_empty' : 'send'}</span>{' '}
-        {isLoading ? 'Sending' : 'Send'}
-      </button>
-      {isSaved ? (
-        <button className="md-tonal-btn save-btn" onClick={saveActiveRequestAs} title="Save As new request">
-          <span className="material-symbols-outlined">save_as</span> Save As
+      {isWs ? (
+        <button
+          className={`md-filled-btn send-btn ${wsActive ? 'ws-disconnect' : ''}`}
+          onClick={() => (wsActive ? wsDisconnect(tab.id) : wsConnect(tab.id))}
+          title={wsActive ? 'Disconnect' : 'Connect'}
+        >
+          <span className="material-symbols-outlined">{wsActive ? 'link_off' : 'cable'}</span>{' '}
+          {wsActive ? 'Disconnect' : 'Connect'}
         </button>
       ) : (
-        <button className="md-tonal-btn save-btn" onClick={saveActiveRequest} title="Save Request (Cmd+S)">
-          <span className="material-symbols-outlined">save</span> Save
-        </button>
+        <>
+          <button className="md-filled-btn send-btn" onClick={send} disabled={isLoading} title="Send Request (Cmd+Enter)">
+            <span className="material-symbols-outlined">{isLoading ? 'hourglass_empty' : 'send'}</span>{' '}
+            {isLoading ? 'Sending' : 'Send'}
+          </button>
+          {isSaved ? (
+            <button className="md-tonal-btn save-btn" onClick={saveActiveRequestAs} title="Save As new request">
+              <span className="material-symbols-outlined">save_as</span> Save As
+            </button>
+          ) : (
+            <button className="md-tonal-btn save-btn" onClick={saveActiveRequest} title="Save Request (Cmd+S)">
+              <span className="material-symbols-outlined">save</span> Save
+            </button>
+          )}
+          <button className="md-tonal-btn save-btn" onClick={openCode} title="Generate Code">
+            <span className="material-symbols-outlined">code</span> Code
+          </button>
+        </>
       )}
-      <button className="md-tonal-btn save-btn" onClick={openCode} title="Generate Code">
-        <span className="material-symbols-outlined">code</span> Code
-      </button>
     </div>
   );
+
+  function openCode() {
+    setCodeModalOpen(true);
+  }
 }

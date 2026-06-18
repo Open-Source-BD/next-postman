@@ -13,6 +13,8 @@ export function useRequestRunner(): () => Promise<void> {
     const state = useApiStore.getState();
     const tab = selectActiveTab(state);
     if (!tab.url) return;
+    // Realtime tabs (ws/sse) don't use the HTTP send pipeline.
+    if (tab.protocol && tab.protocol !== 'http') return;
 
     state.setIsLoading(true);
 

@@ -4,6 +4,7 @@ import { PaneResizer } from "./components/PaneResizer";
 import { RequestPane } from "./components/RequestPane";
 import { RequestTabsBar } from "./components/RequestTabsBar";
 import { ResponsePane } from "./components/ResponsePane";
+import { RealtimePane } from "./components/RealtimePane";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { CloseTabModal } from "./components/modals/CloseTabModal";
@@ -20,12 +21,13 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useRequestRunner } from "./hooks/useRequestRunner";
 import { exportData, parseImportFile } from "./lib/importExport";
 import { usePersistence } from "./store/persist";
-import { useApiStore } from "./store/useApiStore";
+import { selectActiveTab, useApiStore } from "./store/useApiStore";
 
 export function ApiClient() {
   usePersistence();
   const hydrated = useApiStore((s) => s.hydrated);
   const theme = useApiStore((s) => s.theme);
+  const activeProtocol = useApiStore((s) => selectActiveTab(s).protocol ?? "http");
   const send = useRequestRunner();
 
   useEffect(() => {
@@ -93,16 +95,20 @@ export function ApiClient() {
       <main className="main-area">
         <TopBar />
         <RequestTabsBar />
-        <div className="pane-split" ref={splitRef}>
-          <div className="request-pane-wrap" style={{ height: requestHeight }}>
-            <RequestPane send={send} />
+        {activeProtocol === "ws" ? (
+          <RealtimePane send={send} />
+        ) : (
+          <div className="pane-split" ref={splitRef}>
+            <div className="request-pane-wrap" style={{ height: requestHeight }}>
+              <RequestPane send={send} />
+            </div>
+            <PaneResizer onDrag={resizeRequestPane} />
+            <ResponsePane
+              onExpand={expandResponse}
+              onCollapse={collapseResponse}
+            />
           </div>
-          <PaneResizer onDrag={resizeRequestPane} />
-          <ResponsePane
-            onExpand={expandResponse}
-            onCollapse={collapseResponse}
-          />
-        </div>
+        )}
       </main>
 
       <input
