@@ -163,8 +163,9 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
                 <JsonTree data={parsed} rawText={prettyText} query={bodySearch} />
               ) : (
                 <CodeView
-                  text={isJson ? res.rawText : prettyText}
-                  html={isJson ? syntaxHighlight(res.rawText) : bodyHtml}
+                  text={prettyText}
+                  html={isJson ? syntaxHighlight(prettyText) : bodyHtml}
+                  wrap
                 />
               )}
             </div>

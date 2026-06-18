@@ -560,6 +560,7 @@ body {
   color: var(--md-sys-color-on-surface);
   flex: 1;
 }
+.code-body-wrap { white-space: pre-wrap; word-break: break-word; }
 .types-bar {
   display: flex;
   gap: 6px;
@@ -612,13 +613,30 @@ body {
   font-family: var(--mono-font);
   font-size: 13px;
   line-height: 20px;
-  padding: 8px 4px;
+  padding: 8px 0;
   color: var(--md-sys-color-on-surface);
+  counter-reset: jtline;
 }
-.jt-row { display: flex; align-items: center; white-space: pre; min-height: 20px; }
+.jt-row { display: flex; align-items: center; white-space: pre; min-height: 20px; counter-increment: jtline; }
 .jt-branch { cursor: pointer; border-radius: 4px; }
 .jt-branch:hover { background: var(--md-sys-color-surface-container-high); }
-.jt-toggle { font-size: 16px; width: 18px; flex: none; color: var(--md-sys-color-on-surface-variant); }
+.jt-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: none;
+  width: 44px;
+  padding-right: 10px;
+  text-align: right;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.5;
+  user-select: none;
+  background: var(--md-sys-color-surface-container-lowest);
+}
+.jt-gutter::before { content: counter(jtline); }
+.jt-indent { flex: none; }
+.jt-toggle { font-size: 16px; width: 18px; flex: none; color: var(--md-sys-color-on-surface-variant); opacity: 0; transition: opacity 0.1s; }
+.jt-row:hover .jt-toggle { opacity: 1; }
 .jt-spacer { width: 18px; flex: none; }
 .jt-colon { color: var(--md-sys-color-on-surface-variant); }
 .jt-bracket { color: var(--md-sys-color-on-surface-variant); }

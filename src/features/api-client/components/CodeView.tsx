@@ -6,9 +6,11 @@ interface CodeViewProps {
   text: string;
   /** Optional pre-highlighted HTML to render instead of plain text. */
   html?: string;
+  /** Wrap long lines instead of scrolling horizontally (response Raw view). */
+  wrap?: boolean;
 }
 
-export function CodeView({ text, html }: CodeViewProps) {
+export function CodeView({ text, html, wrap }: CodeViewProps) {
   const [copied, setCopied] = useState(false);
   const lineCount = text ? text.split('\n').length : 1;
 
@@ -32,9 +34,9 @@ export function CodeView({ text, html }: CodeViewProps) {
           ))}
         </div>
         {html !== undefined ? (
-          <pre className="code-body" dangerouslySetInnerHTML={{ __html: html }} />
+          <pre className={`code-body${wrap ? ' code-body-wrap' : ''}`} dangerouslySetInnerHTML={{ __html: html }} />
         ) : (
-          <pre className="code-body">{text}</pre>
+          <pre className={`code-body${wrap ? ' code-body-wrap' : ''}`}>{text}</pre>
         )}
       </div>
     </div>

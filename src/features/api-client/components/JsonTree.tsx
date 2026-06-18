@@ -81,7 +81,7 @@ interface NodeProps {
 
 function JsonNode({ keyName, value, depth, isLast, defaultOpen }: NodeProps) {
   const [open, setOpen] = useState(defaultOpen);
-  const pad = { paddingLeft: depth * 16 + 8 };
+  const indent = { width: depth * 16 + 8 };
   const isContainer = value !== null && typeof value === 'object';
 
   const keyLabel =
@@ -94,8 +94,10 @@ function JsonNode({ keyName, value, depth, isLast, defaultOpen }: NodeProps) {
 
   if (!isContainer) {
     return (
-      <div className="jt-row" style={pad}>
+      <div className="jt-row">
+        <span className="jt-gutter" />
         <span className="jt-spacer" />
+        <span className="jt-indent" style={indent} />
         {keyLabel}
         <Primitive value={value} />
         {!isLast && <span>,</span>}
@@ -112,8 +114,10 @@ function JsonNode({ keyName, value, depth, isLast, defaultOpen }: NodeProps) {
 
   return (
     <>
-      <div className="jt-row jt-branch" style={pad} onClick={() => setOpen((o) => !o)}>
+      <div className="jt-row jt-branch" onClick={() => setOpen((o) => !o)}>
+        <span className="jt-gutter" />
         <span className="jt-toggle material-symbols-outlined">{open ? 'expand_more' : 'chevron_right'}</span>
+        <span className="jt-indent" style={indent} />
         {keyLabel}
         <span className="jt-bracket">{ob}</span>
         {!open && (
@@ -135,8 +139,10 @@ function JsonNode({ keyName, value, depth, isLast, defaultOpen }: NodeProps) {
           />
         ))}
       {open && (
-        <div className="jt-row" style={pad}>
+        <div className="jt-row">
+          <span className="jt-gutter" />
           <span className="jt-spacer" />
+          <span className="jt-indent" style={indent} />
           <span className="jt-bracket">{cb}</span>
           {!isLast && <span>,</span>}
         </div>
