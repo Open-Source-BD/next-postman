@@ -1231,3 +1231,21 @@ body {
 .cookies-row { display: flex; gap: 10px; padding: 6px 12px; font-family: var(--mono-font); font-size: 12px; border-top: 1px solid var(--md-sys-color-outline-variant); }
 .cookies-name { color: var(--md-sys-color-primary); flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
 .cookies-value { color: var(--md-sys-color-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- {{var}} autocomplete --- */
+.var-input-wrap { position: relative; flex: 1; display: flex; }
+.var-suggest {
+  position: absolute; top: calc(100% + 2px); left: 0; z-index: 60;
+  min-width: 220px; max-width: 360px; max-height: 220px; overflow-y: auto;
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2); padding: 4px;
+}
+.var-suggest-row {
+  display: flex; width: 100%; padding: 6px 10px; border: none; background: none;
+  cursor: pointer; border-radius: 6px; text-align: left;
+  font-family: var(--mono-font); font-size: 13px; color: var(--md-sys-color-on-surface);
+}
+.var-suggest-row.active { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.var-suggest-name { color: var(--md-sys-color-primary); }
+.var-suggest-row.active .var-suggest-name { color: var(--md-sys-color-on-primary-container); }

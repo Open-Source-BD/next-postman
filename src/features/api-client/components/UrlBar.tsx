@@ -1,6 +1,7 @@
 'use client';
 import type { HttpMethod } from '../types';
 import { selectActiveTab, useApiStore } from '../store/useApiStore';
+import { VarInput } from './VarInput';
 
 const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
 
@@ -32,12 +33,13 @@ export function UrlBar({ send }: UrlBarProps) {
           </option>
         ))}
       </select>
-      <input
+      <VarInput
         className="md-input url-input"
         value={tab.url}
-        onChange={(e) => updateActiveTab({ url: e.target.value })}
+        onValueChange={(url) => updateActiveTab({ url })}
         placeholder="https://api.example.com/v1/users/{{userId}}"
-        spellCheck="false"
+        spellCheck={false}
+        aria-label="Request URL"
       />
       <button
         className="md-filled-btn send-btn"
