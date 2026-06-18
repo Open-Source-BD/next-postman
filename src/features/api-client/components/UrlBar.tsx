@@ -7,6 +7,7 @@ const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS
 const PROTOCOLS: { value: Protocol; label: string }[] = [
   { value: 'http', label: 'HTTP' },
   { value: 'ws', label: 'WS' },
+  { value: 'sse', label: 'SSE' },
 ];
 
 interface UrlBarProps {
@@ -24,11 +25,14 @@ export function UrlBar({ send }: UrlBarProps) {
   const setTabProtocol = useApiStore((s) => s.setTabProtocol);
   const wsConnect = useApiStore((s) => s.wsConnect);
   const wsDisconnect = useApiStore((s) => s.wsDisconnect);
+  const sseConnect = useApiStore((s) => s.sseConnect);
   const rtStatus = useApiStore((s) => s.realtime[tab.id]?.status ?? 'idle');
 
   const protocol = tab.protocol ?? 'http';
   const isWs = protocol === 'ws';
-  const wsActive = rtStatus === 'connecting' || rtStatus === 'open';
+  const isRealtime = protocol !== 'http';
+  const rtActive = rtStatus === 'connecting' || rtStatus === 'open';
+  const connect = () => (protocol === 'sse' ? sseConnect(tab.id) : wsConnect(tab.id));
 
   return (
     <div className="url-bar-container">
@@ -58,18 +62,18 @@ export function UrlBar({ send }: UrlBarProps) {
         className="md-input url-input"
         value={tab.url}
         onValueChange={(url) => updateActiveTab({ url })}
-        placeholder={isWs ? 'wss://echo.example.com/socket' : 'https://api.example.com/v1/users/{{userId}}'}
+        placeholder={isWs ? 'wss://echo.example.com/socket' : protocol === 'sse' ? 'https://api.example.com/events' : 'https://api.example.com/v1/users/{{userId}}'}
         spellCheck={false}
-        aria-label={isWs ? 'WebSocket URL' : 'Request URL'}
+        aria-label={isRealtime ? `${protocol.toUpperCase()} URL` : 'Request URL'}
       />
-      {isWs ? (
+      {isRealtime ? (
         <button
-          className={`md-filled-btn send-btn ${wsActive ? 'ws-disconnect' : ''}`}
-          onClick={() => (wsActive ? wsDisconnect(tab.id) : wsConnect(tab.id))}
-          title={wsActive ? 'Disconnect' : 'Connect'}
+          className={`md-filled-btn send-btn ${rtActive ? 'ws-disconnect' : ''}`}
+          onClick={() => (rtActive ? wsDisconnect(tab.id) : connect())}
+          title={rtActive ? 'Disconnect' : 'Connect'}
         >
-          <span className="material-symbols-outlined">{wsActive ? 'link_off' : 'cable'}</span>{' '}
-          {wsActive ? 'Disconnect' : 'Connect'}
+          <span className="material-symbols-outlined">{rtActive ? 'link_off' : 'cable'}</span>{' '}
+          {rtActive ? 'Disconnect' : 'Connect'}
         </button>
       ) : (
         <>

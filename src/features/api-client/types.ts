@@ -83,6 +83,8 @@ export interface RealtimeState {
   error?: string;
   /** close code/reason when status is closed/error. */
   closeInfo?: string;
+  /** SSE: last event id seen, sent as Last-Event-ID on reconnect. */
+  lastEventId?: string;
 }
 
 export interface TabState {

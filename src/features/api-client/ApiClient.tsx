@@ -95,7 +95,7 @@ export function ApiClient() {
       <main className="main-area">
         <TopBar />
         <RequestTabsBar />
-        {activeProtocol === "ws" ? (
+        {activeProtocol !== "http" ? (
           <RealtimePane send={send} />
         ) : (
           <div className="pane-split" ref={splitRef}>

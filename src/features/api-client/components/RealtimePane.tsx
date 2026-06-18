@@ -24,6 +24,7 @@ export function RealtimePane({ send }: Props) {
   const wsSend = useApiStore((s) => s.wsSend);
 
   const [draft, setDraft] = useState('');
+  const isWs = (tab.protocol ?? 'http') === 'ws';
   const status = rt?.status ?? 'idle';
   const messages = rt?.messages ?? [];
   const total = rt?.total ?? 0;
@@ -55,7 +56,7 @@ export function RealtimePane({ send }: Props) {
         {messages.length === 0 && (
           <div className="empty-state" style={{ padding: '40px 16px' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '44px', opacity: 0.5 }}>swap_vert</span>
-            <span>{status === 'open' ? 'Connected. Send a message below.' : 'Connect to a WebSocket URL to start.'}</span>
+            <span>{status === 'open' ? (isWs ? 'Connected. Send a message below.' : 'Connected. Waiting for events…') : `Connect to ${isWs ? 'a WebSocket' : 'an SSE'} URL to start.`}</span>
           </div>
         )}
         {trimmed > 0 && <div className="rt-trim">… {trimmed} older messages trimmed</div>}
@@ -68,6 +69,7 @@ export function RealtimePane({ send }: Props) {
         ))}
       </div>
 
+      {isWs && (
       <div className="rt-composer">
         <textarea
           className="md-input rt-input"
@@ -82,6 +84,7 @@ export function RealtimePane({ send }: Props) {
           <span className="material-symbols-outlined">send</span> Send
         </button>
       </div>
+      )}
     </div>
   );
 }

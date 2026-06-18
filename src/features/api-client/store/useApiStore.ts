@@ -9,7 +9,8 @@ import { parseData } from '../lib/parseData';
 import { serializeWorkspace, deserializeWorkspace } from '../lib/workspaceFile';
 import { cookieHeaderFor, mergeSetCookie, type CookieJar } from '../lib/cookies';
 import { resolveEnv } from '../lib/envResolver';
-import { openWebSocket, sendWebSocket, closeConnection, byteLen } from '../lib/realtimeConnection';
+import { openWebSocket, openSse, sendWebSocket, closeConnection, byteLen } from '../lib/realtimeConnection';
+import { buildProxyRequest } from '../lib/buildProxyRequest';
 import type { Protocol, RealtimeState, RtMessage } from '../types';
 
 const RT_LOG_CAP = 500;
@@ -250,6 +251,7 @@ interface ApiState {
   wsConnect: (tabId: string) => void;
   wsSend: (tabId: string, text: string) => void;
   wsDisconnect: (tabId: string) => void;
+  sseConnect: (tabId: string) => void;
   setCookieModalOpen: (v: boolean) => void;
   setSaveModalOpen: (v: boolean) => void;
   setCodeModalOpen: (v: boolean) => void;
@@ -854,6 +856,43 @@ export const useApiStore = create<ApiState>((set, get) => ({
     set((s) => {
       const rt = s.realtime[tabId] ?? { status: 'idle' as const, messages: [], total: 0 };
       return { realtime: { ...s.realtime, [tabId]: pushRtMessage({ ...rt, status: 'closed' }, 'system', 'Disconnected', 0) } };
+    });
+  },
+
+  sseConnect: (tabId) => {
+    const state = get();
+    const tab = state.tabs.find((t) => t.id === tabId);
+    if (!tab) return;
+    const built = buildProxyRequest(tab, selectActiveVars(state));
+    const cookie = cookieHeaderFor(state.cookieJar, built.finalUrl);
+    const prevId = state.realtime[tabId]?.lastEventId;
+
+    const proxyHeaders = new Headers(built.headers);
+    proxyHeaders.set('X-Proxy-Target-Url', built.finalUrl);
+    proxyHeaders.set('X-Proxy-Method', built.method);
+    if (cookie) proxyHeaders.set('X-Proxy-Cookie', cookie);
+    if (prevId) proxyHeaders.set('X-Proxy-Last-Event-Id', prevId);
+    if (built.isFormData) proxyHeaders.delete('Content-Type');
+
+    set((s) => ({ realtime: { ...s.realtime, [tabId]: { status: 'connecting', messages: [], total: 0, lastEventId: prevId } } }));
+    openSse(tabId, { headers: proxyHeaders, body: built.body }, {
+      onStatus: (status, info) =>
+        set((s) => {
+          const rt = s.realtime[tabId] ?? { status: 'idle', messages: [], total: 0 };
+          return { realtime: { ...s.realtime, [tabId]: { ...rt, status, closeInfo: info, error: status === 'error' ? info ?? 'error' : rt.error } } };
+        }),
+      onMessage: (dir, text, bytes) =>
+        set((s) => {
+          const rt = s.realtime[tabId];
+          if (!rt) return {};
+          return { realtime: { ...s.realtime, [tabId]: pushRtMessage(rt, dir, text, bytes) } };
+        }),
+      onId: (id) =>
+        set((s) => {
+          const rt = s.realtime[tabId];
+          if (!rt) return {};
+          return { realtime: { ...s.realtime, [tabId]: { ...rt, lastEventId: id } } };
+        }),
     });
   },
 
