@@ -9,16 +9,13 @@ import { diffLines, diffStats } from '../lib/diffLines';
 import { CodeView } from './CodeView';
 import { JsonTree } from './JsonTree';
 import { executeActiveSend } from '../lib/sendActive';
+import { parseJsonBody } from '../lib/parseJsonBody';
 
 /** Pretty-print a body for stable diffing (indented JSON when parseable). */
 function prettyBody(rawText: string | undefined): string {
   if (rawText === undefined) return '';
-  try {
-    const v = JSON.parse(rawText);
-    if (v && typeof v === 'object') return JSON.stringify(v, null, 2);
-  } catch {
-    /* not JSON */
-  }
+  const v = parseJsonBody(rawText);
+  if (v && typeof v === 'object') return JSON.stringify(v, null, 2);
   return rawText;
 }
 
@@ -43,15 +40,7 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
 
   const cookies = parseSetCookie(res?.headers['set-cookie']);
 
-  const parseJson = (text: string | undefined): unknown => {
-    if (text === undefined) return undefined;
-    try {
-      return JSON.parse(text);
-    } catch {
-      return undefined;
-    }
-  };
-  const parsed = parseJson(res?.rawText);
+  const parsed = parseJsonBody(res?.rawText);
 
   const downloadBody = () => {
     if (!res) return;

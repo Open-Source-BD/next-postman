@@ -13,7 +13,12 @@ const EXCLUDED_REQUEST_HEADERS = [
   'accept-encoding',
 ];
 
-const EXCLUDED_RESPONSE_HEADERS = ['content-encoding', 'transfer-encoding', 'connection'];
+// `content-length` is dropped because undici transparently decompresses the
+// upstream body, so the upstream length (the *compressed* size) no longer
+// matches the bytes we forward — keeping it truncates the response in the
+// browser. Let the framework recompute it. `content-encoding`/`transfer-encoding`
+// are stale for the same decompression reason.
+const EXCLUDED_RESPONSE_HEADERS = ['content-encoding', 'transfer-encoding', 'connection', 'content-length'];
 
 const BODY_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
