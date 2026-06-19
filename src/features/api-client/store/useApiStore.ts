@@ -7,6 +7,7 @@ import { isTabDirty } from '../lib/tabDirty';
 import { runCollection, type RunResultItem } from '../lib/collectionRunner';
 import { parseData } from '../lib/parseData';
 import { serializeWorkspace, deserializeWorkspace } from '../lib/workspaceFile';
+import { zipFiles, unzipFiles } from '../lib/zipWorkspace';
 import { cookieHeaderFor, mergeSetCookie, type CookieJar } from '../lib/cookies';
 import { resolveEnv } from '../lib/envResolver';
 import { openWebSocket, openSse, sendWebSocket, closeConnection, byteLen } from '../lib/realtimeConnection';
@@ -243,6 +244,9 @@ interface ApiState {
   saveToWorkspace: () => Promise<void>;
   loadFromWorkspace: () => Promise<void>;
   disconnectWorkspace: () => Promise<void>;
+  /** Snapshot fallback for browsers without File System Access (Firefox/Safari). */
+  exportWorkspaceZip: () => Promise<void>;
+  importWorkspaceZip: (file: File) => Promise<void>;
   setCommandPaletteOpen: (v: boolean) => void;
   captureCookies: (url: string, setCookieHeader: string | undefined) => void;
   clearCookies: (domain?: string) => void;
@@ -784,6 +788,50 @@ export const useApiStore = create<ApiState>((set, get) => ({
     await clearHandle();
     wsHandle = null;
     set({ workspaceStatus: 'disconnected', workspaceName: '', workspaceError: null });
+  },
+
+  // Snapshot fallback: package the same serialized files as a .zip the user can
+  // commit to git or move between machines. Not live like the folder — a manual
+  // export/import — but it works everywhere (Firefox/Safari included).
+  exportWorkspaceZip: async () => {
+    set({ workspaceBusy: true, workspaceError: null });
+    try {
+      const { collections, environments, globals } = get();
+      if (typeof localStorage !== 'undefined' && !localStorage.getItem(FILE_BODY_WARNED_KEY) && anyFileBody(collections)) {
+        localStorage.setItem(FILE_BODY_WARNED_KEY, '1');
+        alert('Heads up: file attachments in form-data bodies are not written to the zip (the file itself can’t be serialized). Everything else is saved — re-attach files after importing.');
+      }
+      const blob = await zipFiles(serializeWorkspace({ collections, environments, globals }));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'next-postman-workspace.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      set({ workspaceError: (e as Error).message });
+    } finally {
+      set({ workspaceBusy: false });
+    }
+  },
+
+  importWorkspaceZip: async (file) => {
+    set({ workspaceBusy: true, workspaceError: null });
+    try {
+      const data = deserializeWorkspace(await unzipFiles(await file.arrayBuffer()));
+      const expanded = { ...get().expanded };
+      data.collections.forEach((c) => { expanded[c.id] = true; });
+      set({
+        collections: data.collections,
+        environments: data.environments,
+        globals: data.globals,
+        expanded,
+      });
+    } catch (e) {
+      set({ workspaceError: (e as Error).message });
+    } finally {
+      set({ workspaceBusy: false });
+    }
   },
 
   setCommandPaletteOpen: (isCommandPaletteOpen) => set({ isCommandPaletteOpen }),

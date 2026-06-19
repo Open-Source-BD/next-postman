@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApiStore } from '../store/useApiStore';
 
 /**
@@ -17,15 +17,48 @@ export function WorkspaceChip() {
   const save = useApiStore((s) => s.saveToWorkspace);
   const load = useApiStore((s) => s.loadFromWorkspace);
   const disconnect = useApiStore((s) => s.disconnectWorkspace);
+  const exportZip = useApiStore((s) => s.exportWorkspaceZip);
+  const importZip = useApiStore((s) => s.importWorkspaceZip);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const icon = (n: string) => <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{n}</span>;
 
+  const onPickZip = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-importing the same file
+    if (file) void importZip(file);
+  };
+
+  // Hidden input shared by every state that offers zip import.
+  const zipInput = (
+    <input ref={fileRef} type="file" accept=".zip" hidden onChange={onPickZip} aria-hidden="true" />
+  );
+
   if (status === 'unsupported') {
+    // No File System Access (Firefox/Safari) → manual zip snapshot, not a dead end.
     return (
-      <span className="ws-chip ws-muted" title="Local folder sync needs a Chromium browser (Chrome/Edge). Use Export/Import JSON elsewhere.">
-        {icon('folder_off')} Folder: Chromium only
-      </span>
+      <div className="ws-chip-wrap" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false); }}>
+        {zipInput}
+        <button
+          className="ws-chip"
+          onClick={() => setMenuOpen((o) => !o)}
+          disabled={busy}
+          aria-expanded={menuOpen}
+          title={error || 'Live folder sync needs Chromium (Chrome/Edge). Export/import a git-friendly zip snapshot instead.'}
+          aria-label="Workspace zip snapshot options"
+        >
+          {icon(error ? 'error' : 'folder_zip')}
+          <span aria-live="polite">{busy ? 'Working…' : 'Workspace (zip)'}</span>
+          {icon('expand_more')}
+        </button>
+        {menuOpen && (
+          <div className="ws-menu" role="menu">
+            <button role="menuitem" onClick={() => { setMenuOpen(false); void exportZip(); }}>{icon('download')} Export zip snapshot</button>
+            <button role="menuitem" onClick={() => { setMenuOpen(false); fileRef.current?.click(); }}>{icon('upload')} Import zip snapshot</button>
+          </div>
+        )}
+      </div>
     );
   }
 
