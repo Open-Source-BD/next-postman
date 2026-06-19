@@ -1019,6 +1019,37 @@ body {
 }
 .empty-state.hidden { display: none; }
 
+/* --- Transport badge: response was sent browser-direct (bot-wall fallback) --- */
+.transport-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 6px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* --- Bot-wall challenge panel (reuses .empty-state layout) --- */
+.challenge-panel { padding: 32px 24px; text-align: center; }
+.challenge-title { font-size: 16px; font-weight: 600; color: var(--md-sys-color-on-surface); }
+.challenge-msg { max-width: 46ch; margin: 0; line-height: 1.5; }
+.challenge-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.challenge-error {
+  max-width: 46ch;
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--md-sys-color-error);
+}
+.challenge-panel .md-filled-btn,
+.challenge-panel .md-text-btn { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+.material-symbols-outlined.spin { animation: rt-spin 0.9s linear infinite; }
+@keyframes rt-spin { to { transform: rotate(360deg); } }
+
 /* Sidebar empty state (in-flow, NOT a full-cover overlay like .empty-state) */
 .sidebar-empty {
   display: flex;

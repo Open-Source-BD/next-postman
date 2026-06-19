@@ -108,4 +108,14 @@ describe('runCollection', () => {
     expect(results).toHaveLength(0);
     expect(mockSend).not.toHaveBeenCalled();
   });
+
+  it('reports a bot-wall challenge as a failed item without switching transport', async () => {
+    mockSend.mockResolvedValueOnce(proxyRes('<title>Just a moment...</title> challenges.cloudflare.com', 403));
+    mockSend.mockResolvedValue(proxyRes('{}'));
+    const { results } = await run([reqNode('blocked'), reqNode('next')]);
+    expect(results[0]).toMatchObject({ name: 'blocked', status: 0, ok: false });
+    expect(results[0].error).toMatch(/Cloudflare bot wall/i);
+    // run continues to the next request (continue-on-failure)
+    expect(results[1]).toMatchObject({ name: 'next', status: 200 });
+  });
 });

@@ -88,3 +88,23 @@ export function buildProxyRequest(tab: TabState, environments: EnvVar[]): BuiltR
 
   return { finalUrl: url.toString(), method: tab.method, headers, body, isFormData: body instanceof FormData };
 }
+
+/**
+ * Headers the browser forbids on a direct `fetch` (it silently drops or throws on
+ * them) plus our proxy-only headers. `buildProxyRequest` produces proxy-shaped
+ * headers; strip these before a browser-direct send so the request is valid and
+ * doesn't leak proxy plumbing. Returns a fresh Headers (does not mutate input).
+ */
+const DIRECT_FORBIDDEN = new Set([
+  'cookie', 'host', 'user-agent', 'referer', 'content-length', 'connection',
+  'accept-encoding', 'origin', 'x-proxy-target-url', 'x-proxy-method', 'x-proxy-cookie',
+  'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto',
+]);
+
+export function sanitizeDirectHeaders(headers: Headers): Headers {
+  const out = new Headers();
+  headers.forEach((value, key) => {
+    if (!DIRECT_FORBIDDEN.has(key.toLowerCase())) out.set(key, value);
+  });
+  return out;
+}

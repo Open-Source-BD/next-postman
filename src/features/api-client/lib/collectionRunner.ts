@@ -77,7 +77,11 @@ export async function runCollection(cfg: RunConfig): Promise<void> {
         ok: res.response?.ok ?? false,
         timeTaken: res.response?.timeTaken ?? 0,
         testResults: res.response?.testResults ?? [],
-        error: res.error?.message,
+        // The runner never auto-switches transport (deterministic runs). A bot-wall
+        // challenge is reported as a failed item; retry it as a single send.
+        error: res.error?.message ?? (res.challenge
+          ? `Blocked by ${res.challenge.vendor} bot wall — retry this request individually to send from your browser`
+          : undefined),
       });
       cfg.onProgress(done, total);
     }

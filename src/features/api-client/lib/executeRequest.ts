@@ -1,6 +1,7 @@
-import type { EnvVar, ResponseData, TabState } from '../types';
+import type { ChallengeInfo, EnvVar, ResponseData, TabState } from '../types';
 import { PmSandbox } from './pmSandbox';
-import { sendViaProxy } from './proxyClient';
+import { sendViaProxy, sendDirect, type ProxyResult } from './proxyClient';
+import { detectBotChallenge } from './botWall';
 
 export interface ExecuteResult {
   /** Populated when the request was sent and a response (any status) came back. */
@@ -9,6 +10,8 @@ export interface ExecuteResult {
   finalUrl?: string;
   /** Set when the request never produced a response. */
   error?: { phase: 'pre-request' | 'send'; message: string };
+  /** Set when the proxy hit a bot-wall challenge that was NOT auto-retried. */
+  challenge?: ChallengeInfo;
 }
 
 export interface ExecuteOptions {
@@ -22,13 +25,32 @@ export interface ExecuteOptions {
   timeoutMs?: number;
   /** Cookie header value from the jar, attached unless the request sets its own. */
   cookieHeader?: string;
+  /**
+   * Bot-wall handling. 'auto' = on a detected challenge, retry browser-direct for
+   * GET/HEAD with no cookie conflict (single-send). 'off' (default) = never auto-
+   * switch transport; report the challenge for the caller to surface (runner).
+   */
+  directFallback?: 'auto' | 'off';
+  /** Skip the proxy and send browser-direct immediately (manual "Retry from browser"). */
+  forceDirect?: boolean;
 }
+
+const SAFE_METHODS = ['GET', 'HEAD'];
+
+const DIRECT_FAIL_MSG =
+  'The proxy was blocked by a bot wall and the browser could not reach the target directly — ' +
+  'likely CORS, a blocked preflight, mixed content (HTTPS app → HTTP target), or a network error.';
 
 /**
  * Framework-free send/test pipeline shared by single-send (useRequestRunner) and
- * the Collection Runner. Runs the pre-request script, sends via the proxy using
- * the POST-script variable bag (so a pre-request `pm.environment.set` reaches
- * `{{var}}` interpolation), then runs tests. Never throws, never touches the UI.
+ * the Collection Runner. Runs the pre-request script, sends (proxy by default,
+ * browser-direct on `forceDirect` or an eligible auto-fallback), then runs tests.
+ * Never throws, never touches the UI.
+ *
+ *   pre-request ─┬─ forceDirect ─────────────► sendDirect ─► tests ─► {transport:'direct'}
+ *                └─ sendViaProxy ─┬─ no challenge ─────────► tests ─► {transport:'proxy'}
+ *                                 └─ challenge ─┬─ auto+eligible ─► sendDirect ─► tests
+ *                                               └─ else ─────────► {challenge} (caller renders UI)
  */
 export async function executeRequest(
   tab: TabState,
@@ -55,16 +77,54 @@ export async function executeRequest(
   }
   const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 30000);
 
-  try {
-    const { finalUrl, ...resData } = await sendViaProxy(tab, vars, ctrl.signal, opts.cookieHeader);
-    sandbox.attachResponse(resData.status, resData.statusText, resData.rawText);
+  const aborted = () => ctrl.signal.aborted;
+  const finish = (result: ProxyResult): ExecuteResult => {
+    sandbox.attachResponse(result.status, result.statusText, result.rawText);
     sandbox.runTests(tab.tests);
+    const { finalUrl, ...resData } = result;
     return { response: { ...resData, testResults: sandbox.testResults }, finalUrl };
+  };
+
+  try {
+    if (opts.forceDirect) {
+      try {
+        return finish(await sendDirect(tab, vars, ctrl.signal));
+      } catch (e) {
+        if ((e as Error).name === 'AbortError' || aborted()) throw e;
+        return { response: null, error: { phase: 'send', message: DIRECT_FAIL_MSG } };
+      }
+    }
+
+    const proxied = await sendViaProxy(tab, vars, ctrl.signal, opts.cookieHeader);
+    const challenge = detectBotChallenge(proxied);
+    if (!challenge) return finish(proxied);
+
+    // A bot-wall interstitial — the origin never saw this request.
+    // directEligible: a clean browser-direct retry is possible (no cookie the
+    //   browser can't replay). Method-independent — the user may retry a POST
+    //   manually, accepting the re-send.
+    // autoOk: only silently auto-retry idempotent methods with no cookie conflict.
+    const explicitCookie = tab.headers.some((h) => h.key?.toLowerCase() === 'cookie' && h.value);
+    const directEligible = !opts.cookieHeader && !explicitCookie;
+    const autoOk = SAFE_METHODS.includes(tab.method) && directEligible;
+
+    if (opts.directFallback === 'auto' && autoOk) {
+      try {
+        return finish(await sendDirect(tab, vars, ctrl.signal));
+      } catch (e) {
+        if ((e as Error).name === 'AbortError' || aborted()) throw e;
+        return { response: null, finalUrl: proxied.finalUrl, error: { phase: 'send', message: DIRECT_FAIL_MSG } };
+      }
+    }
+
+    // Not auto-retried (unsafe method, cookie conflict, or fallback off) — let the
+    // caller decide whether to show a Retry button or a failed run item.
+    return { response: null, finalUrl: proxied.finalUrl, challenge: { vendor: challenge.vendor, method: tab.method, directEligible } };
   } catch (e) {
-    const aborted = (e as Error).name === 'AbortError' || ctrl.signal.aborted;
+    const wasAborted = (e as Error).name === 'AbortError' || aborted();
     return {
       response: null,
-      error: { phase: 'send', message: aborted ? 'Request cancelled or timed out' : (e as Error).message },
+      error: { phase: 'send', message: wasAborted ? 'Request cancelled or timed out' : (e as Error).message },
     };
   } finally {
     clearTimeout(timer);

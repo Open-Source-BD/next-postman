@@ -58,6 +58,18 @@ export interface ResponseData {
   rawText: string;
   headers: Record<string, string>;
   testResults: TestResult[];
+  /** Which transport served this response. Absent = proxy (legacy/back-compat). */
+  transport?: 'proxy' | 'direct';
+}
+
+/** A detected bot-wall challenge that was NOT auto-retried (caller renders UI). */
+export interface ChallengeInfo {
+  vendor: string;
+  method: HttpMethod;
+  /** True when a clean browser-direct retry is possible (no cookie a browser can't replay). */
+  directEligible: boolean;
+  /** Set when a manual browser-direct retry was attempted and failed (CORS/network). */
+  retryError?: string;
 }
 
 export type Protocol = 'http' | 'ws' | 'sse';
@@ -102,6 +114,8 @@ export interface TabState {
   response: ResponseData | null;
   /** Previous run's response, kept in-memory for the Diff view (not persisted). */
   prevResponse?: ResponseData | null;
+  /** Bot-wall challenge pending user action (Retry from browser). Transient, not persisted. */
+  challenge?: ChallengeInfo | null;
   activeSubTab: RequestSubTab;
   activeResTab: ResponseSubTab;
   /** Id of the saved RequestNode this tab was opened from (for Save vs Save As). */
