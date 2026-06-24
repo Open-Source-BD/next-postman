@@ -2,6 +2,7 @@ import type { ChallengeInfo, EnvVar, ResponseData, TabState } from '../types';
 import { PmSandbox } from './pmSandbox';
 import { sendViaProxy, sendDirect, type ProxyResult } from './proxyClient';
 import { detectBotChallenge } from './botWall';
+import { resolveEnv } from './envResolver';
 
 export interface ExecuteResult {
   /** Populated when the request was sent and a response (any status) came back. */
@@ -40,6 +41,32 @@ const SAFE_METHODS = ['GET', 'HEAD'];
 const DIRECT_FAIL_MSG =
   'The proxy was blocked by a bot wall and the browser could not reach the target directly — ' +
   'likely CORS, a blocked preflight, mixed content (HTTPS app → HTTP target), or a network error.';
+
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
+
+const LOCALHOST_HELP_MSG =
+  'Cannot reach localhost from the deployed app.\n\n' +
+  'The server-side proxy (on Vercel) cannot connect to your local machine, and the ' +
+  'browser-direct fallback was blocked by CORS.\n\n' +
+  'To fix, add this header to your API response:\n' +
+  '  Access-Control-Allow-Origin: https://<your-app>.vercel.app\n\n' +
+  'Or run next-postman locally (npm run dev) for zero-config localhost testing.';
+
+function isRemoteApp(): boolean {
+  if (typeof window === 'undefined') return true;
+  return !LOCAL_HOSTNAMES.has(window.location.hostname);
+}
+
+function isLocalhostUrl(url: string, vars: EnvVar[]): boolean {
+  if (!url) return false;
+  try {
+    const resolved = resolveEnv(url, vars).trim();
+    const withProto = /^https?:\/\//i.test(resolved) ? resolved : `http://${resolved}`;
+    return LOCAL_HOSTNAMES.has(new URL(withProto).hostname);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Framework-free send/test pipeline shared by single-send (useRequestRunner) and
@@ -86,12 +113,18 @@ export async function executeRequest(
   };
 
   try {
-    if (opts.forceDirect) {
+    // forceDirect (Retry from browser) or remote app targeting localhost → skip proxy
+    const useDirect = opts.forceDirect || (isRemoteApp() && isLocalhostUrl(tab.url, vars));
+
+    if (useDirect) {
       try {
         return finish(await sendDirect(tab, vars, ctrl.signal));
       } catch (e) {
         if ((e as Error).name === 'AbortError' || aborted()) throw e;
-        return { response: null, error: { phase: 'send', message: DIRECT_FAIL_MSG } };
+        return {
+          response: null,
+          error: { phase: 'send', message: opts.forceDirect ? DIRECT_FAIL_MSG : LOCALHOST_HELP_MSG },
+        };
       }
     }
 
