@@ -39,12 +39,12 @@ function EnvModalInner() {
 
   const selectedEnv = environments.find((e) => e.id === selectedId);
   const isGlobals = selectedId === GLOBALS;
-  const vars: EnvVar[] = isGlobals ? globals : selectedEnv?.vars ?? [];
+  const vars: EnvVar[] = isGlobals ? globals : (selectedEnv?.vars ?? []);
   const onVarsChange = (items: EnvVar[]) =>
     isGlobals ? setGlobals(items) : selectedEnv && setEnvVars(selectedEnv.id, items);
 
   // Copy/move targets: every other container (Globals + other envs).
-  const currentId = isGlobals ? null : selectedEnv?.id ?? null;
+  const currentId = isGlobals ? null : (selectedEnv?.id ?? null);
   const targets = [
     { key: GLOBALS, id: null as string | null, name: 'Globals' },
     ...environments.map((e) => ({ key: e.id, id: e.id as string | null, name: e.name })),
@@ -68,17 +68,30 @@ function EnvModalInner() {
       >
         <option value="">⇄</option>
         <optgroup label="Copy to">
-          {targets.map((t) => <option key={`c-${t.key}`} value={`copy|${t.key}`}>{t.name}</option>)}
+          {targets.map((t) => (
+            <option key={`c-${t.key}`} value={`copy|${t.key}`}>
+              {t.name}
+            </option>
+          ))}
         </optgroup>
         <optgroup label="Move to">
-          {targets.map((t) => <option key={`m-${t.key}`} value={`move|${t.key}`}>{t.name}</option>)}
+          {targets.map((t) => (
+            <option key={`m-${t.key}`} value={`move|${t.key}`}>
+              {t.name}
+            </option>
+          ))}
         </optgroup>
       </select>
     );
   };
 
   return (
-    <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+    <div
+      className="md-modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setOpen(false);
+      }}
+    >
       <div className="md-modal" style={{ maxWidth: '820px', width: '95%' }}>
         <div className="md-modal-header">
           <h3>Environments</h3>
@@ -88,11 +101,11 @@ function EnvModalInner() {
         </div>
         <div className="md-modal-body env-modal-body">
           <div className="env-list">
-            <button
-              className={`env-list-item ${isGlobals ? 'selected' : ''}`}
-              onClick={() => setSelectedId(GLOBALS)}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>public</span> Globals
+            <button className={`env-list-item ${isGlobals ? 'selected' : ''}`} onClick={() => setSelectedId(GLOBALS)}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                public
+              </span>{' '}
+              Globals
             </button>
             {environments.map((e) => (
               <button
@@ -100,7 +113,10 @@ function EnvModalInner() {
                 className={`env-list-item ${selectedId === e.id ? 'selected' : ''}`}
                 onClick={() => setSelectedId(e.id)}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: activeEnvId === e.id ? 'var(--md-sys-color-primary)' : undefined }}>
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: '18px', color: activeEnvId === e.id ? 'var(--md-sys-color-primary)' : undefined }}
+                >
                   {activeEnvId === e.id ? 'check_circle' : 'lan'}
                 </span>
                 <span className="env-list-name">{e.name}</span>
@@ -112,7 +128,9 @@ function EnvModalInner() {
                 placeholder="New environment"
                 value={newName}
                 onChange={(ev) => setNewName(ev.target.value)}
-                onKeyDown={(ev) => { if (ev.key === 'Enter') addEnv(); }}
+                onKeyDown={(ev) => {
+                  if (ev.key === 'Enter') addEnv();
+                }}
               />
               <button className="md-icon-btn-small" onClick={addEnv} disabled={!newName.trim()}>
                 <span className="material-symbols-outlined">add</span>
@@ -136,12 +154,17 @@ function EnvModalInner() {
                     className={`md-tonal-btn ${activeEnvId === selectedEnv.id ? 'active' : ''}`}
                     onClick={() => setActiveEnv(activeEnvId === selectedEnv.id ? null : selectedEnv.id)}
                   >
-                    <span className="material-symbols-outlined">{activeEnvId === selectedEnv.id ? 'check_circle' : 'radio_button_unchecked'}</span>
+                    <span className="material-symbols-outlined">
+                      {activeEnvId === selectedEnv.id ? 'check_circle' : 'radio_button_unchecked'}
+                    </span>
                     {activeEnvId === selectedEnv.id ? 'Active' : 'Set active'}
                   </button>
                   <button
                     className="md-icon-btn-small danger"
-                    onClick={() => { deleteEnvironment(selectedEnv.id); setSelectedId(GLOBALS); }}
+                    onClick={() => {
+                      deleteEnvironment(selectedEnv.id);
+                      setSelectedId(GLOBALS);
+                    }}
                   >
                     <span className="material-symbols-outlined">delete</span>
                   </button>

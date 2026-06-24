@@ -13,7 +13,20 @@ const OVERTYPE = new Set([')', ']', '}', '"', "'", '`']);
 
 // HTML void elements — never get a closing tag.
 const VOID_TAGS = new Set([
-  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
 ]);
 
 export type EditorLang = 'json' | 'js' | 'xml' | 'html' | 'text';
@@ -50,7 +63,13 @@ export function computeEdit({ key, value, selStart, selEnd, lang = 'js' }: KeyCt
         const tag = m[1];
         const isVoid = lang === 'html' && VOID_TAGS.has(tag.toLowerCase());
         if (!isVoid) {
-          return { start: selStart, end: selEnd, text: `></${tag}>`, cursorStart: selStart + 1, cursorEnd: selStart + 1 };
+          return {
+            start: selStart,
+            end: selEnd,
+            text: `></${tag}>`,
+            cursorStart: selStart + 1,
+            cursorEnd: selStart + 1,
+          };
         }
       }
     }

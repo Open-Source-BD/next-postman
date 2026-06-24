@@ -44,46 +44,73 @@ export function RealtimePane({ send }: Props) {
 
       <div className="rt-status-bar">
         <span className="rt-status" style={{ color: meta.color }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{meta.icon}</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+            {meta.icon}
+          </span>
           {meta.label}
         </span>
         {rt?.closeInfo && status !== 'error' && <span className="rt-info">{rt.closeInfo}</span>}
-        {rt?.error && <span className="rt-error" role="alert">{rt.error}</span>}
-        <span className="rt-count">{total} message{total === 1 ? '' : 's'}</span>
+        {rt?.error && (
+          <span className="rt-error" role="alert">
+            {rt.error}
+          </span>
+        )}
+        <span className="rt-count">
+          {total} message{total === 1 ? '' : 's'}
+        </span>
       </div>
 
       <div className="rt-log" aria-live="polite">
         {messages.length === 0 && (
           <div className="empty-state" style={{ padding: '40px 16px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '44px', opacity: 0.5 }}>swap_vert</span>
-            <span>{status === 'open' ? (isWs ? 'Connected. Send a message below.' : 'Connected. Waiting for events…') : `Connect to ${isWs ? 'a WebSocket' : 'an SSE'} URL to start.`}</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '44px', opacity: 0.5 }}>
+              swap_vert
+            </span>
+            <span>
+              {status === 'open'
+                ? isWs
+                  ? 'Connected. Send a message below.'
+                  : 'Connected. Waiting for events…'
+                : `Connect to ${isWs ? 'a WebSocket' : 'an SSE'} URL to start.`}
+            </span>
           </div>
         )}
         {trimmed > 0 && <div className="rt-trim">… {trimmed} older messages trimmed</div>}
         {messages.map((m) => (
           <div key={m.id} className={`rt-row rt-${m.dir}`}>
-            <span className="material-symbols-outlined rt-dir" style={{ fontSize: '14px' }}>{DIR_ICON[m.dir]}</span>
+            <span className="material-symbols-outlined rt-dir" style={{ fontSize: '14px' }}>
+              {DIR_ICON[m.dir]}
+            </span>
             <span className="rt-text">{m.text}</span>
-            <span className="rt-meta">{m.bytes ? `${m.bytes}B` : ''} {new Date(m.ts).toLocaleTimeString()}</span>
+            <span className="rt-meta">
+              {m.bytes ? `${m.bytes}B` : ''} {new Date(m.ts).toLocaleTimeString()}
+            </span>
           </div>
         ))}
       </div>
 
       {isWs && (
-      <div className="rt-composer">
-        <textarea
-          className="md-input rt-input"
-          placeholder={canSend ? 'Message to send (Enter to send, Shift+Enter for newline)' : 'Connect to send messages'}
-          value={draft}
-          disabled={!canSend}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } }}
-          rows={2}
-        />
-        <button className="md-filled-btn rt-send" onClick={submit} disabled={!canSend || !draft}>
-          <span className="material-symbols-outlined">send</span> Send
-        </button>
-      </div>
+        <div className="rt-composer">
+          <textarea
+            className="md-input rt-input"
+            placeholder={
+              canSend ? 'Message to send (Enter to send, Shift+Enter for newline)' : 'Connect to send messages'
+            }
+            value={draft}
+            disabled={!canSend}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            rows={2}
+          />
+          <button className="md-filled-btn rt-send" onClick={submit} disabled={!canSend || !draft}>
+            <span className="material-symbols-outlined">send</span> Send
+          </button>
+        </div>
       )}
     </div>
   );

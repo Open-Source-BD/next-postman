@@ -44,7 +44,9 @@ export function UrlBar({ send }: UrlBarProps) {
         aria-label="Protocol"
       >
         {PROTOCOLS.map((p) => (
-          <option key={p.value} value={p.value}>{p.label}</option>
+          <option key={p.value} value={p.value}>
+            {p.label}
+          </option>
         ))}
       </select>
       {!isWs && (
@@ -54,7 +56,9 @@ export function UrlBar({ send }: UrlBarProps) {
           onChange={(e) => updateActiveTab({ method: e.target.value as HttpMethod })}
         >
           {METHODS.map((m) => (
-            <option key={m} value={m}>{m}</option>
+            <option key={m} value={m}>
+              {m}
+            </option>
           ))}
         </select>
       )}
@@ -62,7 +66,13 @@ export function UrlBar({ send }: UrlBarProps) {
         className="md-input url-input"
         value={tab.url}
         onValueChange={(url) => updateActiveTab({ url })}
-        placeholder={isWs ? 'wss://echo.example.com/socket' : protocol === 'sse' ? 'https://api.example.com/events' : 'https://api.example.com/v1/users/{{userId}}'}
+        placeholder={
+          isWs
+            ? 'wss://echo.example.com/socket'
+            : protocol === 'sse'
+              ? 'https://api.example.com/events'
+              : 'https://api.example.com/v1/users/{{userId}}'
+        }
         spellCheck={false}
         aria-label={isRealtime ? `${protocol.toUpperCase()} URL` : 'Request URL'}
       />
@@ -77,7 +87,12 @@ export function UrlBar({ send }: UrlBarProps) {
         </button>
       ) : (
         <>
-          <button className="md-filled-btn send-btn" onClick={send} disabled={isLoading} title="Send Request (Cmd+Enter)">
+          <button
+            className="md-filled-btn send-btn"
+            onClick={send}
+            disabled={isLoading}
+            title="Send Request (Cmd+Enter)"
+          >
             <span className="material-symbols-outlined">{isLoading ? 'hourglass_empty' : 'send'}</span>{' '}
             {isLoading ? 'Sending' : 'Send'}
           </button>

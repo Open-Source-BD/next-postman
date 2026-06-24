@@ -9,7 +9,12 @@ describe('cookie jar', () => {
   });
 
   it('builds a Cookie header for a matching host only', () => {
-    const jar: CookieJar = { 'api.example.com': [{ name: 'sid', value: 'a' }, { name: 'csrf', value: 'b' }] };
+    const jar: CookieJar = {
+      'api.example.com': [
+        { name: 'sid', value: 'a' },
+        { name: 'csrf', value: 'b' },
+      ],
+    };
     expect(cookieHeaderFor(jar, 'https://api.example.com/x')).toBe('sid=a; csrf=b');
     expect(cookieHeaderFor(jar, 'https://other.com/x')).toBe('');
   });
@@ -19,7 +24,10 @@ describe('cookie jar', () => {
     jar = mergeSetCookie(jar, 'https://api.example.com/login', 'sid=1; Path=/; HttpOnly');
     expect(jar['api.example.com']).toEqual([{ name: 'sid', value: '1' }]);
     jar = mergeSetCookie(jar, 'https://api.example.com/login', 'sid=2, theme=dark');
-    expect(jar['api.example.com']).toEqual([{ name: 'sid', value: '2' }, { name: 'theme', value: 'dark' }]);
+    expect(jar['api.example.com']).toEqual([
+      { name: 'sid', value: '2' },
+      { name: 'theme', value: 'dark' },
+    ]);
   });
 
   it('is a no-op when there is no Set-Cookie or host', () => {

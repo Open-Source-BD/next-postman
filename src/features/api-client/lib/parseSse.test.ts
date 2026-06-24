@@ -23,7 +23,9 @@ describe('createSseParser', () => {
   it('ignores comments/heartbeats and CRLF, strips one leading space', () => {
     const p = createSseParser();
     expect(p.push(': keep-alive\r\n\r\n')).toEqual([]); // comment + blank, no data → no event
-    expect(p.push('data:no-space\r\n\r\n')).toEqual([{ event: 'message', data: 'no-space', id: undefined, retry: undefined }]);
+    expect(p.push('data:no-space\r\n\r\n')).toEqual([
+      { event: 'message', data: 'no-space', id: undefined, retry: undefined },
+    ]);
   });
 
   it('strips a leading BOM', () => {

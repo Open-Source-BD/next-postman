@@ -24,7 +24,10 @@ const spec = {
       get: {
         tags: ['pets'],
         summary: 'List pets',
-        parameters: [{ $ref: '#/components/parameters/LimitParam' }, { name: 'X-Trace', in: 'header', schema: { type: 'string' } }],
+        parameters: [
+          { $ref: '#/components/parameters/LimitParam' },
+          { name: 'X-Trace', in: 'header', schema: { type: 'string' } },
+        ],
       },
       post: {
         tags: ['pets'],

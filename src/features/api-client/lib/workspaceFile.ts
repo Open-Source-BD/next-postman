@@ -39,7 +39,10 @@ const splitVars = (vars: EnvVar[]) => ({
 
 /** Filesystem-safe segment. Order/identity never depend on this (id is in content). */
 function sanitize(name: string): string {
-  return (name.trim() || 'unnamed').replace(/[/\\:*?"<>|]+/g, '_').replace(/\s+/g, ' ').slice(0, 80);
+  return (name.trim() || 'unnamed')
+    .replace(/[/\\:*?"<>|]+/g, '_')
+    .replace(/\s+/g, ' ')
+    .slice(0, 80);
 }
 
 const pad = (n: number) => String(n).padStart(3, '0');
@@ -47,9 +50,7 @@ const pad = (n: number) => String(n).padStart(3, '0');
 /** Deep-clone a request, nulling unserializable File bodies. */
 function stripFiles(request: TabState): TabState {
   const clone: TabState = JSON.parse(JSON.stringify({ ...request, response: null }));
-  clone.body.formdata = clone.body.formdata.map((item) =>
-    item.type === 'file' ? { ...item, file: null } : item
-  );
+  clone.body.formdata = clone.body.formdata.map((item) => (item.type === 'file' ? { ...item, file: null } : item));
   return clone;
 }
 
@@ -193,7 +194,8 @@ export function deserializeWorkspace(entries: FileEntry[]): WorkspaceData {
 
     const parsed = safeParse(entry.content);
     if (file === '_collection.json') {
-      if (parsed && typeof parsed === 'object') collectionsRoot.get(colDirName)!.collectionMeta = parsed as DirNode['collectionMeta'];
+      if (parsed && typeof parsed === 'object')
+        collectionsRoot.get(colDirName)!.collectionMeta = parsed as DirNode['collectionMeta'];
     } else if (file === '_folder.json') {
       if (parsed && typeof parsed === 'object') dir.folderMeta = parsed as DirNode['folderMeta'];
     } else if (file.endsWith('.json') && parsed && typeof parsed === 'object') {

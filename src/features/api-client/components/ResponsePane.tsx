@@ -54,7 +54,7 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
   };
 
   const isJson = parsed !== undefined && typeof parsed === 'object' && parsed !== null;
-  const prettyText = isJson ? JSON.stringify(parsed, null, 2) : res?.rawText ?? '';
+  const prettyText = isJson ? JSON.stringify(parsed, null, 2) : (res?.rawText ?? '');
   const bodyHtml = isJson
     ? syntaxHighlight(prettyText)
     : (res?.rawText ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -78,8 +78,13 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
           <span>{res ? `${res.status} ${res.statusText}` : 'Waiting for request...'}</span>
         </div>
         {res?.transport === 'direct' && (
-          <span className="transport-badge" title="Sent directly from your browser to bypass a bot wall. Response headers are limited by CORS, and cookies were not sent.">
-            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>open_in_browser</span>
+          <span
+            className="transport-badge"
+            title="Sent directly from your browser to bypass a bot wall. Response headers are limited by CORS, and cookies were not sent."
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+              open_in_browser
+            </span>
             Sent from your browser
           </span>
         )}
@@ -93,13 +98,24 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
           {!inModal && (
             <div className="response-view-actions">
               <button className="md-icon-btn-small" onClick={onExpand} title="Expand response">
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>expand_less</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  expand_less
+                </span>
               </button>
               <button className="md-icon-btn-small" onClick={onCollapse} title="Collapse response">
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>expand_more</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  expand_more
+                </span>
               </button>
-              <button className="md-icon-btn-small" onClick={() => setResponseModalOpen(true)} title="Open in modal" disabled={!res}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>open_in_full</span>
+              <button
+                className="md-icon-btn-small"
+                onClick={() => setResponseModalOpen(true)}
+                title="Open in modal"
+                disabled={!res}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  open_in_full
+                </span>
               </button>
             </div>
           )}
@@ -154,7 +170,9 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
       <div className="response-content">
         {challenge && (
           <div className="empty-state challenge-panel" aria-live="polite">
-            <span className="material-symbols-outlined" style={{ fontSize: '44px', color: 'var(--warning)' }}>shield</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '44px', color: 'var(--warning)' }}>
+              shield
+            </span>
             <span className="challenge-title">Blocked by {challenge.vendor}</span>
             <p className="challenge-msg">
               This target rejects requests from the server&apos;s datacenter IP with a bot wall.
@@ -164,18 +182,24 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
             </p>
             {isLoading ? (
               <button className="md-filled-btn" disabled>
-                <span className="material-symbols-outlined spin" style={{ fontSize: '18px' }}>progress_activity</span>
+                <span className="material-symbols-outlined spin" style={{ fontSize: '18px' }}>
+                  progress_activity
+                </span>
                 Retrying from browser…
               </button>
             ) : challenge.directEligible ? (
               <button className="md-filled-btn" onClick={() => void executeActiveSend({ forceDirect: true })}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>open_in_browser</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  open_in_browser
+                </span>
                 Retry from browser
               </button>
             ) : (
               <div className="challenge-actions">
                 <button className="md-filled-btn" onClick={() => setCookieModalOpen(true)}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>cookie</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                    cookie
+                  </span>
                   Manage cookies
                 </button>
                 <button className="md-text-btn" onClick={() => void executeActiveSend({ forceDirect: true })}>
@@ -184,7 +208,9 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
               </div>
             )}
             {challenge.retryError && !isLoading && (
-              <p className="challenge-error" role="status">{challenge.retryError}</p>
+              <p className="challenge-error" role="status">
+                {challenge.retryError}
+              </p>
             )}
           </div>
         )}
@@ -200,12 +226,25 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
 
         {res && (
           <>
-            <div className={`md-tab-content ${tab.activeResTab === 'body' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
+            <div
+              className={`md-tab-content ${tab.activeResTab === 'body' ? 'active' : ''}`}
+              style={{ padding: 0, minHeight: 'unset' }}
+            >
               <div className="types-bar">
                 {isJson && (
                   <>
-                    <button className={`types-lang-btn ${bodyView === 'pretty' ? 'active' : ''}`} onClick={() => setBodyView('pretty')}>Pretty</button>
-                    <button className={`types-lang-btn ${bodyView === 'raw' ? 'active' : ''}`} onClick={() => setBodyView('raw')}>Raw</button>
+                    <button
+                      className={`types-lang-btn ${bodyView === 'pretty' ? 'active' : ''}`}
+                      onClick={() => setBodyView('pretty')}
+                    >
+                      Pretty
+                    </button>
+                    <button
+                      className={`types-lang-btn ${bodyView === 'raw' ? 'active' : ''}`}
+                      onClick={() => setBodyView('raw')}
+                    >
+                      Raw
+                    </button>
                     {bodyView === 'pretty' && (
                       <input
                         className="md-input"
@@ -218,21 +257,23 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
                   </>
                 )}
                 <button className="types-lang-btn" onClick={downloadBody} style={{ marginLeft: 'auto' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>download</span> Download
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
+                    download
+                  </span>{' '}
+                  Download
                 </button>
               </div>
               {isJson && bodyView === 'pretty' ? (
                 <JsonTree data={parsed} rawText={prettyText} query={bodySearch} />
               ) : (
-                <CodeView
-                  text={prettyText}
-                  html={isJson ? syntaxHighlight(prettyText) : bodyHtml}
-                  wrap
-                />
+                <CodeView text={prettyText} html={isJson ? syntaxHighlight(prettyText) : bodyHtml} wrap />
               )}
             </div>
 
-            <div className={`md-tab-content ${tab.activeResTab === 'headers' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
+            <div
+              className={`md-tab-content ${tab.activeResTab === 'headers' ? 'active' : ''}`}
+              style={{ padding: 0, minHeight: 'unset' }}
+            >
               <div className="res-headers-grid">
                 {Object.keys(res.headers).map((k) => (
                   <React.Fragment key={k}>
@@ -244,7 +285,10 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
             </div>
 
             {isJson && (
-              <div className={`md-tab-content ${tab.activeResTab === 'types' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
+              <div
+                className={`md-tab-content ${tab.activeResTab === 'types' ? 'active' : ''}`}
+                style={{ padding: 0, minHeight: 'unset' }}
+              >
                 <div className="types-bar">
                   {TYPE_LANGS.map((l) => (
                     <button
@@ -269,7 +313,10 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
                       <div className="header-value">
                         {c.value}
                         {c.attributes && (
-                          <span style={{ color: 'var(--md-sys-color-on-surface-variant)', fontSize: '12px' }}> — {c.attributes}</span>
+                          <span style={{ color: 'var(--md-sys-color-on-surface-variant)', fontSize: '12px' }}>
+                            {' '}
+                            — {c.attributes}
+                          </span>
                         )}
                       </div>
                     </React.Fragment>
@@ -285,7 +332,13 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
               {res.testResults.map((test, i) => (
                 <div
                   key={i}
-                  style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'flex-start',
+                    padding: '8px 0',
+                    borderBottom: '1px solid var(--md-sys-color-outline-variant)',
+                  }}
                 >
                   <span
                     className="material-symbols-outlined"
@@ -294,11 +347,23 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
                     {test.pass ? 'check_circle' : 'cancel'}
                   </span>
                   <div>
-                    <div style={{ fontWeight: 500, color: test.pass ? 'var(--md-sys-color-on-surface)' : 'var(--md-sys-color-error)' }}>
+                    <div
+                      style={{
+                        fontWeight: 500,
+                        color: test.pass ? 'var(--md-sys-color-on-surface)' : 'var(--md-sys-color-error)',
+                      }}
+                    >
                       {test.name}
                     </div>
                     {!test.pass && (
-                      <div style={{ fontSize: '12px', color: 'var(--md-sys-color-on-surface-variant)', fontFamily: 'var(--mono-font)', marginTop: '4px' }}>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: 'var(--md-sys-color-on-surface-variant)',
+                          fontFamily: 'var(--mono-font)',
+                          marginTop: '4px',
+                        }}
+                      >
                         {test.error}
                       </div>
                     )}
@@ -308,10 +373,15 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
             </div>
 
             {prev && (
-              <div className={`md-tab-content ${tab.activeResTab === 'diff' ? 'active' : ''}`} style={{ padding: 0, minHeight: 'unset' }}>
+              <div
+                className={`md-tab-content ${tab.activeResTab === 'diff' ? 'active' : ''}`}
+                style={{ padding: 0, minHeight: 'unset' }}
+              >
                 <div className="diff-summary">
                   <span className="diff-prev">prev {prev.status}</span>
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                    arrow_forward
+                  </span>
                   <span className="diff-cur">current {res.status}</span>
                   <span className="diff-counts">
                     <span className="diff-add-count">+{diffSummary.added}</span>{' '}
@@ -320,14 +390,18 @@ export function ResponsePane({ onExpand, onCollapse, inModal }: ResponsePaneProp
                 </div>
                 {diffSummary.added === 0 && diffSummary.removed === 0 ? (
                   <div className="empty-state" style={{ padding: '32px' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '40px', opacity: 0.5 }}>check</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '40px', opacity: 0.5 }}>
+                      check
+                    </span>
                     <span>Response body is identical to the previous run.</span>
                   </div>
                 ) : (
                   <pre className="diff-view">
                     {diff.map((line, i) => (
                       <div key={i} className={`diff-line diff-${line.type}`}>
-                        <span className="diff-gutter">{line.type === 'add' ? '+' : line.type === 'del' ? '-' : ' '}</span>
+                        <span className="diff-gutter">
+                          {line.type === 'add' ? '+' : line.type === 'del' ? '-' : ' '}
+                        </span>
                         {line.text || ' '}
                       </div>
                     ))}

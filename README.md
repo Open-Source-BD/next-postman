@@ -66,15 +66,15 @@ src/
 
 How next-postman compares to the tools it learns from:
 
-| Tool | Model | Storage | Lock-in |
-| --- | --- | --- | --- |
-| **next-postman** | Free, local-first, browser-based | Plain files on disk (git-native) | None |
-| [Postman](https://www.postman.com) | Freemium SaaS, account + cloud sync | Cloud workspaces | Account-gated features, cloud sync |
-| [Insomnia](https://insomnia.rest) | Open-source desktop, account for sync | Local + optional cloud | Account for sync/collaboration |
-| [Hoppscotch](https://hoppscotch.io) | Open-source, web + self-host | Browser/local + cloud | Low; self-hostable |
-| [Bruno](https://www.usebruno.com) | Open-source desktop, offline-first | Plain `.bru` files in git | None |
-| [HTTPie Desktop](https://httpie.io/desktop) | Freemium desktop | Local + cloud spaces | Account for spaces |
-| [curl](https://curl.se) | CLI | Shell scripts | None |
+| Tool                                        | Model                                 | Storage                          | Lock-in                            |
+| ------------------------------------------- | ------------------------------------- | -------------------------------- | ---------------------------------- |
+| **next-postman**                            | Free, local-first, browser-based      | Plain files on disk (git-native) | None                               |
+| [Postman](https://www.postman.com)          | Freemium SaaS, account + cloud sync   | Cloud workspaces                 | Account-gated features, cloud sync |
+| [Insomnia](https://insomnia.rest)           | Open-source desktop, account for sync | Local + optional cloud           | Account for sync/collaboration     |
+| [Hoppscotch](https://hoppscotch.io)         | Open-source, web + self-host          | Browser/local + cloud            | Low; self-hostable                 |
+| [Bruno](https://www.usebruno.com)           | Open-source desktop, offline-first    | Plain `.bru` files in git        | None                               |
+| [HTTPie Desktop](https://httpie.io/desktop) | Freemium desktop                      | Local + cloud spaces             | Account for spaces                 |
+| [curl](https://curl.se)                     | CLI                                   | Shell scripts                    | None                               |
 
 next-postman is closest in spirit to **Bruno** (git-native, no-lock-in) but runs in the browser with a server-side proxy for CORS-free requests, plus a built-in collection runner, realtime (WS/SSE), and code/type generation.
 

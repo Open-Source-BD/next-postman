@@ -14,14 +14,29 @@ class MockWS {
   onclose: ((e: { code: number; reason: string }) => void) | null = null;
   onerror: (() => void) | null = null;
   sent: string[] = [];
-  constructor(public url: string, public protocols?: string | string[]) {
+  constructor(
+    public url: string,
+    public protocols?: string | string[],
+  ) {
     instances.push(this);
   }
-  send(d: string) { this.sent.push(d); }
-  close() { this.readyState = MockWS.CLOSED; }
-  _open() { this.readyState = MockWS.OPEN; this.onopen?.(); }
-  _msg(data: unknown) { this.onmessage?.({ data }); }
-  _close(code = 1000, reason = '') { this.readyState = MockWS.CLOSED; this.onclose?.({ code, reason }); }
+  send(d: string) {
+    this.sent.push(d);
+  }
+  close() {
+    this.readyState = MockWS.CLOSED;
+  }
+  _open() {
+    this.readyState = MockWS.OPEN;
+    this.onopen?.();
+  }
+  _msg(data: unknown) {
+    this.onmessage?.({ data });
+  }
+  _close(code = 1000, reason = '') {
+    this.readyState = MockWS.CLOSED;
+    this.onclose?.({ code, reason });
+  }
 }
 
 function handlers() {

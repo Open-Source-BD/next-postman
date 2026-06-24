@@ -112,10 +112,15 @@ async function runSse(
   handlers: RtHandlers,
   abort: AbortController,
   gen: number,
-  alive: () => boolean
+  alive: () => boolean,
 ): Promise<void> {
   try {
-    const res = await fetch('/api/stream', { method: 'POST', headers: init.headers, body: init.body, signal: abort.signal });
+    const res = await fetch('/api/stream', {
+      method: 'POST',
+      headers: init.headers,
+      body: init.body,
+      signal: abort.signal,
+    });
     if (!alive()) return;
     if (!res.ok || !res.body) {
       let msg = `Stream error ${res.status}`;
@@ -138,7 +143,11 @@ async function runSse(
       const { value, done } = await reader.read();
       if (done) break;
       if (!alive()) {
-        try { await reader.cancel(); } catch { /* noop */ }
+        try {
+          await reader.cancel();
+        } catch {
+          /* noop */
+        }
         return;
       }
       const text = decoder.decode(value, { stream: true });

@@ -32,8 +32,8 @@ function CloseTabModalInner({ closingTabId }: { closingTabId: string }) {
         </div>
         <div className="md-modal-body">
           <p style={{ marginBottom: '20px', color: 'var(--md-sys-color-on-surface-variant)' }}>
-            Do you want to save the changes you made to <strong>{name}</strong>? Your changes will be
-            lost if you don&apos;t save them.
+            Do you want to save the changes you made to <strong>{name}</strong>? Your changes will be lost if you
+            don&apos;t save them.
           </p>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
             <button className="md-text-btn" onClick={confirmCloseTab}>

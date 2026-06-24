@@ -96,9 +96,20 @@ export function buildProxyRequest(tab: TabState, environments: EnvVar[]): BuiltR
  * doesn't leak proxy plumbing. Returns a fresh Headers (does not mutate input).
  */
 const DIRECT_FORBIDDEN = new Set([
-  'cookie', 'host', 'user-agent', 'referer', 'content-length', 'connection',
-  'accept-encoding', 'origin', 'x-proxy-target-url', 'x-proxy-method', 'x-proxy-cookie',
-  'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto',
+  'cookie',
+  'host',
+  'user-agent',
+  'referer',
+  'content-length',
+  'connection',
+  'accept-encoding',
+  'origin',
+  'x-proxy-target-url',
+  'x-proxy-method',
+  'x-proxy-cookie',
+  'x-forwarded-for',
+  'x-forwarded-host',
+  'x-forwarded-proto',
 ]);
 
 export function sanitizeDirectHeaders(headers: Headers): Headers {

@@ -40,7 +40,7 @@ export class PmSandbox {
   constructor(
     environments: EnvVar[],
     onEnvSet: (key: string, value: string) => void,
-    iterationData: Record<string, string> = {}
+    iterationData: Record<string, string> = {},
   ) {
     const envMap = this.envMap;
     environments.forEach((e) => {

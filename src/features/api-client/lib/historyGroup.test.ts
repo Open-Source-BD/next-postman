@@ -16,12 +16,8 @@ const item = (id: string, date: string, url = 'https://api/x', method: HistoryIt
 describe('groupHistoryByDate', () => {
   it('buckets into Today / Yesterday / older', () => {
     const groups = groupHistoryByDate(
-      [
-        item('a', '2026-06-14T09:00:00'),
-        item('b', '2026-06-13T09:00:00'),
-        item('c', '2026-06-01T09:00:00'),
-      ],
-      NOW
+      [item('a', '2026-06-14T09:00:00'), item('b', '2026-06-13T09:00:00'), item('c', '2026-06-01T09:00:00')],
+      NOW,
     );
     expect(groups[0].label).toBe('Today');
     expect(groups[1].label).toBe('Yesterday');
@@ -30,17 +26,17 @@ describe('groupHistoryByDate', () => {
   });
 
   it('merges same-day items into one group', () => {
-    const groups = groupHistoryByDate(
-      [item('a', '2026-06-14T09:00:00'), item('b', '2026-06-14T11:00:00')],
-      NOW
-    );
+    const groups = groupHistoryByDate([item('a', '2026-06-14T09:00:00'), item('b', '2026-06-14T11:00:00')], NOW);
     expect(groups).toHaveLength(1);
     expect(groups[0].items).toHaveLength(2);
   });
 });
 
 describe('filterHistory', () => {
-  const items = [item('a', '2026-06-14T09:00:00', 'https://api/users', 'GET'), item('b', '2026-06-14T09:00:00', 'https://api/login', 'POST')];
+  const items = [
+    item('a', '2026-06-14T09:00:00', 'https://api/users', 'GET'),
+    item('b', '2026-06-14T09:00:00', 'https://api/login', 'POST'),
+  ];
 
   it('matches on url', () => {
     expect(filterHistory(items, 'login').map((i) => i.id)).toEqual(['b']);

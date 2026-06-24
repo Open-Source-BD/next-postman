@@ -22,7 +22,11 @@ export function WorkspaceChip() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const icon = (n: string) => <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{n}</span>;
+  const icon = (n: string) => (
+    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+      {n}
+    </span>
+  );
 
   const onPickZip = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,21 +35,26 @@ export function WorkspaceChip() {
   };
 
   // Hidden input shared by every state that offers zip import.
-  const zipInput = (
-    <input ref={fileRef} type="file" accept=".zip" hidden onChange={onPickZip} aria-hidden="true" />
-  );
+  const zipInput = <input ref={fileRef} type="file" accept=".zip" hidden onChange={onPickZip} aria-hidden="true" />;
 
   if (status === 'unsupported') {
     // No File System Access (Firefox/Safari) → manual zip snapshot, not a dead end.
     return (
-      <div className="ws-chip-wrap" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false); }}>
+      <div
+        className="ws-chip-wrap"
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false);
+        }}
+      >
         {zipInput}
         <button
           className="ws-chip"
           onClick={() => setMenuOpen((o) => !o)}
           disabled={busy}
           aria-expanded={menuOpen}
-          title={error || 'Live folder sync needs Chromium (Chrome/Edge). Export/import a git-friendly zip snapshot instead.'}
+          title={
+            error || 'Live folder sync needs Chromium (Chrome/Edge). Export/import a git-friendly zip snapshot instead.'
+          }
           aria-label="Workspace zip snapshot options"
         >
           {icon(error ? 'error' : 'folder_zip')}
@@ -54,8 +63,24 @@ export function WorkspaceChip() {
         </button>
         {menuOpen && (
           <div className="ws-menu" role="menu">
-            <button role="menuitem" onClick={() => { setMenuOpen(false); void exportZip(); }}>{icon('download')} Export zip snapshot</button>
-            <button role="menuitem" onClick={() => { setMenuOpen(false); fileRef.current?.click(); }}>{icon('upload')} Import zip snapshot</button>
+            <button
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                void exportZip();
+              }}
+            >
+              {icon('download')} Export zip snapshot
+            </button>
+            <button
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                fileRef.current?.click();
+              }}
+            >
+              {icon('upload')} Import zip snapshot
+            </button>
           </div>
         )}
       </div>
@@ -64,7 +89,13 @@ export function WorkspaceChip() {
 
   if (status === 'disconnected') {
     return (
-      <button className="ws-chip" onClick={connect} disabled={busy} title="Save collections to a local folder you can commit to git" aria-label="Connect a local workspace folder">
+      <button
+        className="ws-chip"
+        onClick={connect}
+        disabled={busy}
+        title="Save collections to a local folder you can commit to git"
+        aria-label="Connect a local workspace folder"
+      >
         {icon('create_new_folder')} {busy ? 'Connecting…' : 'Connect folder'}
       </button>
     );
@@ -72,7 +103,13 @@ export function WorkspaceChip() {
 
   if (status === 'reconnect') {
     return (
-      <button className="ws-chip ws-reconnect" onClick={reconnect} disabled={busy} title={error || 'Re-grant folder permission (browsers drop it on reload)'} aria-label={`Reconnect workspace folder ${name}`}>
+      <button
+        className="ws-chip ws-reconnect"
+        onClick={reconnect}
+        disabled={busy}
+        title={error || 'Re-grant folder permission (browsers drop it on reload)'}
+        aria-label={`Reconnect workspace folder ${name}`}
+      >
         {icon('sync_problem')} <span aria-live="polite">{busy ? 'Reconnecting…' : `Reconnect ${name}`}</span>
       </button>
     );
@@ -80,7 +117,12 @@ export function WorkspaceChip() {
 
   // connected
   return (
-    <div className="ws-chip-wrap" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false); }}>
+    <div
+      className="ws-chip-wrap"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false);
+      }}
+    >
       <button
         className="ws-chip ws-connected"
         onClick={() => setMenuOpen((o) => !o)}
@@ -95,9 +137,34 @@ export function WorkspaceChip() {
       </button>
       {menuOpen && (
         <div className="ws-menu" role="menu">
-          <button role="menuitem" onClick={() => { setMenuOpen(false); save(); }}>{icon('save')} Save to folder</button>
-          <button role="menuitem" onClick={() => { setMenuOpen(false); load(); }}>{icon('folder_open')} Load from folder</button>
-          <button role="menuitem" className="ws-menu-danger" onClick={() => { setMenuOpen(false); disconnect(); }}>{icon('link_off')} Disconnect</button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setMenuOpen(false);
+              save();
+            }}
+          >
+            {icon('save')} Save to folder
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setMenuOpen(false);
+              load();
+            }}
+          >
+            {icon('folder_open')} Load from folder
+          </button>
+          <button
+            role="menuitem"
+            className="ws-menu-danger"
+            onClick={() => {
+              setMenuOpen(false);
+              disconnect();
+            }}
+          >
+            {icon('link_off')} Disconnect
+          </button>
         </div>
       )}
     </div>

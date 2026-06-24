@@ -28,7 +28,7 @@ function toProxyResult(
   rawText: string,
   finalUrl: string,
   transport: 'proxy' | 'direct',
-  clientMs?: number
+  clientMs?: number,
 ): ProxyResult {
   const headers: Record<string, string> = {};
   response.headers.forEach((v, k) => {
@@ -60,7 +60,7 @@ export async function sendViaProxy(
   tab: TabState,
   environments: EnvVar[],
   signal?: AbortSignal,
-  cookieHeader?: string
+  cookieHeader?: string,
 ): Promise<ProxyResult> {
   const { finalUrl, method, headers, body: fetchBody, isFormData } = buildProxyRequest(tab, environments);
 

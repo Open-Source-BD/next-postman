@@ -22,7 +22,8 @@ export function isFsSupported(): boolean {
 }
 
 export async function pickWorkspaceDir(): Promise<DirHandle> {
-  const picker = (window as unknown as { showDirectoryPicker: (o: { mode: string }) => Promise<DirHandle> }).showDirectoryPicker;
+  const picker = (window as unknown as { showDirectoryPicker: (o: { mode: string }) => Promise<DirHandle> })
+    .showDirectoryPicker;
   return picker({ mode: 'readwrite' });
 }
 

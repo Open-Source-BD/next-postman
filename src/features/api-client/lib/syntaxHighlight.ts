@@ -10,6 +10,6 @@ export function syntaxHighlight(json: unknown): string {
       else if (/true|false/.test(match)) cls = 'json-boolean';
       else if (/null/.test(match)) cls = 'json-null';
       return `<span class="${cls}">${match}</span>`;
-    }
+    },
   );
 }

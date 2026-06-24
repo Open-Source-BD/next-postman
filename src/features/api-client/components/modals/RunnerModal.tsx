@@ -46,7 +46,7 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
       }
       if (e.key === 'Tab' && el) {
         const focusable = Array.from(
-          el.querySelectorAll<HTMLElement>('button, input, textarea, [tabindex]:not([tabindex="-1"])')
+          el.querySelectorAll<HTMLElement>('button, input, textarea, [tabindex]:not([tabindex="-1"])'),
         ).filter((n) => !n.hasAttribute('disabled'));
         if (focusable.length === 0) return;
         const first = focusable[0];
@@ -98,9 +98,13 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
           {/* Config row */}
           <div className="runner-config">
             <div className="runner-target">
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>folder</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                folder
+              </span>
               <span className="runner-target-name">{name}</span>
-              <span className="runner-target-count">{requestCount} request{requestCount === 1 ? '' : 's'}</span>
+              <span className="runner-target-count">
+                {requestCount} request{requestCount === 1 ? '' : 's'}
+              </span>
             </div>
             <label className="runner-iter">
               Iterations
@@ -120,7 +124,9 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
               disabled={running}
               aria-expanded={showData}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>dataset</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                dataset
+              </span>
               Data file
             </button>
             {running ? (
@@ -134,7 +140,9 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
                 disabled={requestCount === 0}
                 onClick={() => startRun({ iterations, dataText })}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>play_arrow</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  play_arrow
+                </span>
                 {hasRun ? 'Run again' : 'Run'}
               </button>
             )}
@@ -151,7 +159,11 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
             />
           )}
 
-          {error && <div className="runner-error" role="alert">{error}</div>}
+          {error && (
+            <div className="runner-error" role="alert">
+              {error}
+            </div>
+          )}
 
           {/* Progress */}
           {(running || hasRun) && progress.total > 0 && (
@@ -163,7 +175,9 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
                 />
               </div>
               <div className="runner-progress-label" aria-live="polite">
-                {running ? `Running ${progress.current} of ${progress.total}` : `${progress.current} of ${progress.total} done`}
+                {running
+                  ? `Running ${progress.current} of ${progress.total}`
+                  : `${progress.current} of ${progress.total} done`}
                 {skipped > 0 && ` — stopped, ${skipped} skipped`}
               </div>
             </div>
@@ -172,7 +186,9 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
           {/* Summary */}
           {hasRun && (
             <div className={`runner-summary ${passed === results.length ? 'all-pass' : 'has-fail'}`}>
-              <strong>{passed} / {results.length} passed</strong>
+              <strong>
+                {passed} / {results.length} passed
+              </strong>
               <span className="runner-summary-time">{totalTime} ms total</span>
             </div>
           )}
@@ -181,14 +197,20 @@ function RunnerModalInner({ nodeId }: { nodeId: string }) {
           <div className="runner-report">
             {!hasRun && !running && requestCount === 0 && (
               <div className="runner-empty">
-                <span className="material-symbols-outlined" style={{ fontSize: '40px', opacity: 0.5 }}>playlist_add</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '40px', opacity: 0.5 }}>
+                  playlist_add
+                </span>
                 <span>This {col ? 'collection' : 'folder'} has no requests yet. Add requests to run them.</span>
               </div>
             )}
             {!hasRun && !running && requestCount > 0 && (
               <div className="runner-empty">
-                <span className="material-symbols-outlined" style={{ fontSize: '40px', opacity: 0.5 }}>play_circle</span>
-                <span>Press Run to execute {requestCount} request{requestCount === 1 ? '' : 's'} in order.</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '40px', opacity: 0.5 }}>
+                  play_circle
+                </span>
+                <span>
+                  Press Run to execute {requestCount} request{requestCount === 1 ? '' : 's'} in order.
+                </span>
               </div>
             )}
             {results.map((r, i) => {

@@ -25,12 +25,5 @@ export function CodeTextarea({ value, onChange, language = 'js', ...rest }: Prop
     onChange(el.value);
   };
 
-  return (
-    <textarea
-      {...rest}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onKeyDown={handleKeyDown}
-    />
-  );
+  return <textarea {...rest} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} />;
 }

@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     // Status is still settable (we haven't started streaming) → client sees !ok.
     return NextResponse.json(
       { error: `Upstream responded ${upstream.status} ${upstream.statusText}` },
-      { status: upstream.ok ? 502 : upstream.status }
+      { status: upstream.ok ? 502 : upstream.status },
     );
   }
 

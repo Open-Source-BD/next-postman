@@ -8,7 +8,18 @@ const baseTab: TabState = {
   url: 'https://{{host}}/users',
   params: [],
   headers: [{ id: 'h1', key: 'X-Custom', value: '{{ver}}' }],
-  auth: { type: 'bearer', bearer: '{{token}}', basicUser: '', basicPass: '', apiKeyName: '', apiKeyValue: '', apiKeyIn: 'header', oauthToken: '', jwtToken: '', jwtPrefix: 'Bearer' },
+  auth: {
+    type: 'bearer',
+    bearer: '{{token}}',
+    basicUser: '',
+    basicPass: '',
+    apiKeyName: '',
+    apiKeyValue: '',
+    apiKeyIn: 'header',
+    oauthToken: '',
+    jwtToken: '',
+    jwtPrefix: 'Bearer',
+  },
   body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
   scripts: '',
   tests: '',
@@ -40,7 +51,13 @@ describe('generateCode (curl)', () => {
 describe('generateCode (other languages)', () => {
   const withBody = {
     ...baseTab,
-    body: { type: 'raw' as const, formdata: [], urlencoded: [], rawContent: '{"a":1}', rawType: 'application/json' as const },
+    body: {
+      type: 'raw' as const,
+      formdata: [],
+      urlencoded: [],
+      rawContent: '{"a":1}',
+      rawType: 'application/json' as const,
+    },
   };
 
   it('Fetch: method + headers + body', () => {
@@ -67,12 +84,30 @@ describe('generateCode (other languages)', () => {
   });
 
   it('API key in header', () => {
-    const t = { ...baseTab, auth: { ...baseTab.auth, type: 'apikey' as const, apiKeyName: 'X-Api-Key', apiKeyValue: 'secret', apiKeyIn: 'header' as const } };
+    const t = {
+      ...baseTab,
+      auth: {
+        ...baseTab.auth,
+        type: 'apikey' as const,
+        apiKeyName: 'X-Api-Key',
+        apiKeyValue: 'secret',
+        apiKeyIn: 'header' as const,
+      },
+    };
     expect(generateCode(t, env, 'curl')).toContain("-H 'X-Api-Key: secret'");
   });
 
   it('API key in query', () => {
-    const t = { ...baseTab, auth: { ...baseTab.auth, type: 'apikey' as const, apiKeyName: 'api_key', apiKeyValue: 'k1', apiKeyIn: 'query' as const } };
+    const t = {
+      ...baseTab,
+      auth: {
+        ...baseTab.auth,
+        type: 'apikey' as const,
+        apiKeyName: 'api_key',
+        apiKeyValue: 'k1',
+        apiKeyIn: 'query' as const,
+      },
+    };
     expect(generateCode(t, env, 'curl')).toContain('api_key=k1');
   });
 

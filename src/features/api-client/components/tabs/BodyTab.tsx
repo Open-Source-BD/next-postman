@@ -58,8 +58,13 @@ export function BodyTab() {
       {body.type === 'formdata' && (
         <>
           {body.formdata.some((item) => item.type === 'file' && item.file) && (
-            <div className="body-file-note" title="File attachments live only in this session — they are not written to disk, git, or shared/exported collections.">
-              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>info</span>
+            <div
+              className="body-file-note"
+              title="File attachments live only in this session — they are not written to disk, git, or shared/exported collections."
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
+                info
+              </span>
               Attached files aren&apos;t saved to disk or git — re-attach after reload or on another machine.
             </div>
           )}
@@ -78,13 +83,20 @@ export function BodyTab() {
       )}
       {body.type === 'raw' && (
         <>
-          {(body.rawType === 'application/json' || body.rawType === 'application/xml' || body.rawType === 'text/html') && (
+          {(body.rawType === 'application/json' ||
+            body.rawType === 'application/xml' ||
+            body.rawType === 'text/html') && (
             <div style={{ marginBottom: '8px' }}>
               <button
                 className="md-text-btn"
-                onClick={() => updateActiveTab({ body: { ...body, rawContent: beautify(body.rawContent, body.rawType) } })}
+                onClick={() =>
+                  updateActiveTab({ body: { ...body, rawContent: beautify(body.rawContent, body.rawType) } })
+                }
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>auto_fix_high</span> Beautify
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  auto_fix_high
+                </span>{' '}
+                Beautify
               </button>
             </div>
           )}
@@ -105,7 +117,9 @@ export function BodyTab() {
             className="md-textarea body-textarea"
             language="js"
             value={body.graphql?.query ?? ''}
-            onChange={(query) => updateActiveTab({ body: { ...body, graphql: { query, variables: body.graphql?.variables ?? '' } } })}
+            onChange={(query) =>
+              updateActiveTab({ body: { ...body, graphql: { query, variables: body.graphql?.variables ?? '' } } })
+            }
             spellCheck={false}
             placeholder="query { ... }"
           />
@@ -114,7 +128,9 @@ export function BodyTab() {
             className="md-textarea body-textarea"
             language="json"
             value={body.graphql?.variables ?? ''}
-            onChange={(variables) => updateActiveTab({ body: { ...body, graphql: { query: body.graphql?.query ?? '', variables } } })}
+            onChange={(variables) =>
+              updateActiveTab({ body: { ...body, graphql: { query: body.graphql?.query ?? '', variables } } })
+            }
             spellCheck={false}
             placeholder='{ "id": 1 }'
             style={{ minHeight: '100px' }}

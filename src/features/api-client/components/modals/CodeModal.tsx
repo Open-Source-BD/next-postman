@@ -23,7 +23,12 @@ function CodeModalInner() {
   const code = generateCode(tab, vars, lang);
 
   return (
-    <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+    <div
+      className="md-modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setOpen(false);
+      }}
+    >
       <div className="md-modal" style={{ maxWidth: '760px', width: '95%' }}>
         <div className="md-modal-header">
           <h3>Generate Code</h3>
@@ -43,7 +48,16 @@ function CodeModalInner() {
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', height: '55vh', border: '1px solid var(--md-sys-color-outline-variant)', borderRadius: '8px', overflow: 'hidden' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '55vh',
+              border: '1px solid var(--md-sys-color-outline-variant)',
+              borderRadius: '8px',
+              overflow: 'hidden',
+            }}
+          >
             <CodeView text={code} />
           </div>
         </div>

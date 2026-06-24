@@ -41,11 +41,7 @@ function isSelfReference(targetUrl: string, hostHeader: string | null): string |
     const defaultPort = target.protocol === 'https:' ? '443' : '80';
     const port = hostParts[1] ?? defaultPort;
 
-    if (
-      LOCAL_HOSTNAMES.has(target.hostname) &&
-      hostname === target.hostname &&
-      (target.port || defaultPort) === port
-    ) {
+    if (LOCAL_HOSTNAMES.has(target.hostname) && hostname === target.hostname && (target.port || defaultPort) === port) {
       return `Cannot proxy to the same server (${target.hostname}:${port}). Run the API on a different port.`;
     }
   } catch {
@@ -115,33 +111,21 @@ export async function POST(req: Request) {
     const cause = (error as Error).cause as NodeJS.ErrnoException | undefined;
     const code = cause?.code;
     if (code === 'ECONNREFUSED') {
-      return NextResponse.json(
-        { error: 'Connection refused — is the target server running?' },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: 'Connection refused — is the target server running?' }, { status: 502 });
     }
     if (code === 'ENOTFOUND') {
-      return NextResponse.json(
-        { error: 'DNS lookup failed — check the hostname.' },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: 'DNS lookup failed — check the hostname.' }, { status: 502 });
     }
     if (code === 'ETIMEDOUT' || code === 'UND_ERR_CONNECT_TIMEOUT') {
-      return NextResponse.json(
-        { error: 'Connection timed out — the server is unreachable.' },
-        { status: 504 }
-      );
+      return NextResponse.json({ error: 'Connection timed out — the server is unreachable.' }, { status: 504 });
     }
     if (code === 'ECONNRESET') {
-      return NextResponse.json(
-        { error: 'Connection reset — the server closed the connection.' },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: 'Connection reset — the server closed the connection.' }, { status: 502 });
     }
     if ((error as Error).name === 'TimeoutError' || (error as Error).name === 'AbortError') {
       return NextResponse.json(
         { error: 'Request timed out (30s limit) — the target server is too slow.' },
-        { status: 504 }
+        { status: 504 },
       );
     }
     const message = error instanceof Error ? error.message : 'Internal Server Error';

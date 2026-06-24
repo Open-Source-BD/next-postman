@@ -60,7 +60,13 @@ export function importFromDoc(json: unknown): ParsedImport {
   if (isOpenApi(json)) {
     const { collection, baseUrl } = fromOpenApi(json);
     const environments: Environment[] = baseUrl
-      ? [{ id: generateId(), name: `${collection.name} env`, vars: [{ id: generateId(), key: 'baseUrl', value: baseUrl }] }]
+      ? [
+          {
+            id: generateId(),
+            name: `${collection.name} env`,
+            vars: [{ id: generateId(), key: 'baseUrl', value: baseUrl }],
+          },
+        ]
       : [];
     return { collections: [collection], environments };
   }

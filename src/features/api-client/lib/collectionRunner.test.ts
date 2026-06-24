@@ -68,9 +68,7 @@ describe('runCollection', () => {
   });
 
   it('continues after a failed request (continue-on-failure)', async () => {
-    mockSend
-      .mockRejectedValueOnce(new Error('down'))
-      .mockResolvedValueOnce(proxyRes('{}'));
+    mockSend.mockRejectedValueOnce(new Error('down')).mockResolvedValueOnce(proxyRes('{}'));
     const { results } = await run([reqNode('a'), reqNode('b')]);
     expect(results).toHaveLength(2);
     expect(results[0].error).toBeTruthy();

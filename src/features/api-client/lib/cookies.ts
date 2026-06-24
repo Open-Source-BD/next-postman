@@ -49,7 +49,11 @@ export function parseSetCookie(header: string | undefined): ParsedCookie[] {
     out.push({
       name: first.slice(0, eq).trim(),
       value: first.slice(eq + 1).trim(),
-      attributes: segs.slice(1).map((s) => s.trim()).filter(Boolean).join('; '),
+      attributes: segs
+        .slice(1)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join('; '),
     });
   }
   return out;

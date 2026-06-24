@@ -75,13 +75,23 @@ export async function executeActiveSend(opts: { forceDirect?: boolean } = {}): P
   }
 
   // Success — keep the prior response for the Diff view, clear any challenge panel.
-  state.updateActiveTab({ response: result.response, prevResponse: tab.response, challenge: null, activeResTab: 'body' });
+  state.updateActiveTab({
+    response: result.response,
+    prevResponse: tab.response,
+    challenge: null,
+    activeResTab: 'body',
+  });
   // Set-Cookie isn't readable on a cross-origin direct response, so only the proxy
   // path feeds the jar (and a challenge response never reaches here at all).
   if (result.response.transport !== 'direct') {
     state.captureCookies(result.finalUrl ?? tab.url, result.response.headers['set-cookie']);
   }
-  const snapshot: TabState = { ...JSON.parse(JSON.stringify(tab)), response: null, challenge: null, sourceNodeId: undefined };
+  const snapshot: TabState = {
+    ...JSON.parse(JSON.stringify(tab)),
+    response: null,
+    challenge: null,
+    sourceNodeId: undefined,
+  };
   state.addHistory({
     id: generateId(),
     method: tab.method,

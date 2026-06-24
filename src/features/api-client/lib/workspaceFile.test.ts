@@ -3,20 +3,53 @@ import { serializeWorkspace, deserializeWorkspace, type WorkspaceData } from './
 import type { Collection, TabState } from '../types';
 
 const tab = (over: Partial<TabState> = {}): TabState => ({
-  id: 'r', method: 'GET', url: 'https://x', params: [], headers: [],
-  auth: { type: 'none', bearer: '', basicUser: '', basicPass: '', apiKeyName: '', apiKeyValue: '', apiKeyIn: 'header', oauthToken: '', jwtToken: '', jwtPrefix: 'Bearer' },
+  id: 'r',
+  method: 'GET',
+  url: 'https://x',
+  params: [],
+  headers: [],
+  auth: {
+    type: 'none',
+    bearer: '',
+    basicUser: '',
+    basicPass: '',
+    apiKeyName: '',
+    apiKeyValue: '',
+    apiKeyIn: 'header',
+    oauthToken: '',
+    jwtToken: '',
+    jwtPrefix: 'Bearer',
+  },
   body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
-  scripts: '', tests: '', response: null, activeSubTab: 'params', activeResTab: 'body', ...over,
+  scripts: '',
+  tests: '',
+  response: null,
+  activeSubTab: 'params',
+  activeResTab: 'body',
+  ...over,
 });
 
 const sample = (): WorkspaceData => ({
   collections: [
     {
-      id: 'c1', name: 'API', description: 'my api', date: '2020-01-01T00:00:00.000Z',
+      id: 'c1',
+      name: 'API',
+      description: 'my api',
+      date: '2020-01-01T00:00:00.000Z',
       children: [
-        { id: 'f1', type: 'folder', name: 'Auth', children: [
-          { id: 'req1', type: 'request', name: 'Login', request: tab({ id: 'req1', method: 'POST', url: '{{baseUrl}}/login' }) },
-        ] },
+        {
+          id: 'f1',
+          type: 'folder',
+          name: 'Auth',
+          children: [
+            {
+              id: 'req1',
+              type: 'request',
+              name: 'Login',
+              request: tab({ id: 'req1', method: 'POST', url: '{{baseUrl}}/login' }),
+            },
+          ],
+        },
         { id: 'req2', type: 'request', name: 'Health', request: tab({ id: 'req2', url: '{{baseUrl}}/health' }) },
       ],
     } as Collection,
@@ -47,7 +80,11 @@ describe('workspaceFile', () => {
 
     expect(back.collections).toHaveLength(1);
     const col = back.collections[0];
-    expect({ id: col.id, name: col.name, description: col.description }).toEqual({ id: 'c1', name: 'API', description: 'my api' });
+    expect({ id: col.id, name: col.name, description: col.description }).toEqual({
+      id: 'c1',
+      name: 'API',
+      description: 'my api',
+    });
     // order preserved: folder Auth (0) then Health (1)
     expect(col.children.map((c) => c.name)).toEqual(['Auth', 'Health']);
     const folder = col.children[0];
@@ -63,8 +100,20 @@ describe('workspaceFile', () => {
   it('nulls file bodies (lossy, documented) on serialize', () => {
     const data = sample();
     data.collections[0].children.push({
-      id: 'req3', type: 'request', name: 'Upload',
-      request: tab({ id: 'req3', method: 'POST', body: { type: 'formdata', formdata: [{ id: 'k', key: 'f', value: '', type: 'file', file: new File(['x'], 'x.txt') }], urlencoded: [], rawContent: '', rawType: 'application/json' } }),
+      id: 'req3',
+      type: 'request',
+      name: 'Upload',
+      request: tab({
+        id: 'req3',
+        method: 'POST',
+        body: {
+          type: 'formdata',
+          formdata: [{ id: 'k', key: 'f', value: '', type: 'file', file: new File(['x'], 'x.txt') }],
+          urlencoded: [],
+          rawContent: '',
+          rawType: 'application/json',
+        },
+      }),
     });
     const back = deserializeWorkspace(serializeWorkspace(data));
     const upload = back.collections[0].children.find((c) => c.name === 'Upload');

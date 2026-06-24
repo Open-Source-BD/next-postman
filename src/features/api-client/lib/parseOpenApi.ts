@@ -10,7 +10,12 @@ import { generateId } from './id';
  */
 
 const HTTP_METHODS: Record<string, HttpMethod> = {
-  get: 'GET', post: 'POST', put: 'PUT', patch: 'PATCH', delete: 'DELETE', options: 'OPTIONS',
+  get: 'GET',
+  post: 'POST',
+  put: 'PUT',
+  patch: 'PATCH',
+  delete: 'DELETE',
+  options: 'OPTIONS',
 };
 
 type Obj = Record<string, unknown>;
@@ -27,7 +32,18 @@ function blankTab(): TabState {
     url: '',
     params: [],
     headers: [],
-    auth: { type: 'none', bearer: '', basicUser: '', basicPass: '', apiKeyName: '', apiKeyValue: '', apiKeyIn: 'header', oauthToken: '', jwtToken: '', jwtPrefix: 'Bearer' },
+    auth: {
+      type: 'none',
+      bearer: '',
+      basicUser: '',
+      basicPass: '',
+      apiKeyName: '',
+      apiKeyValue: '',
+      apiKeyIn: 'header',
+      oauthToken: '',
+      jwtToken: '',
+      jwtPrefix: 'Bearer',
+    },
     body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
     scripts: '',
     tests: '',
@@ -45,7 +61,10 @@ export function isOpenApi(json: unknown): boolean {
 /** Resolve a local JSON-pointer `$ref` like "#/components/schemas/User". */
 function resolveRef(doc: Obj, ref: string): unknown {
   if (!ref.startsWith('#/')) return undefined; // external/remote refs unsupported
-  const parts = ref.slice(2).split('/').map((p) => p.replace(/~1/g, '/').replace(/~0/g, '~'));
+  const parts = ref
+    .slice(2)
+    .split('/')
+    .map((p) => p.replace(/~1/g, '/').replace(/~0/g, '~'));
   let cur: unknown = doc;
   for (const part of parts) {
     if (!isObj(cur)) return undefined;
@@ -76,7 +95,7 @@ function sampleFromSchema(doc: Obj, schemaRaw: unknown, seen: Set<string>, depth
   if ('default' in schema) return schema.default;
   if (Array.isArray(schema.enum) && schema.enum.length) return schema.enum[0];
 
-  const type = typeof schema.type === 'string' ? schema.type : (isObj(schema.properties) ? 'object' : undefined);
+  const type = typeof schema.type === 'string' ? schema.type : isObj(schema.properties) ? 'object' : undefined;
   switch (type) {
     case 'object': {
       const out: Obj = {};
@@ -127,7 +146,7 @@ function mapOperation(
   pathLevelParams: unknown[],
   schemes: Obj,
   globalSecurity: Obj | undefined,
-  baseVar: string
+  baseVar: string,
 ): { node: TreeNode; tag: string } {
   const tab = blankTab();
   tab.method = method;
@@ -138,9 +157,7 @@ function mapOperation(
   for (const pRaw of params) {
     const p = deref(doc, pRaw, new Set());
     if (!isObj(p) || typeof p.name !== 'string') continue;
-    const example = String(
-      sampleFromSchema(doc, p.schema, new Set()) ?? p.example ?? ''
-    );
+    const example = String(sampleFromSchema(doc, p.schema, new Set()) ?? p.example ?? '');
     if (p.in === 'query') tab.params.push(kv(p.name, example === 'null' ? '' : example));
     else if (p.in === 'header') tab.headers.push(kv(p.name, example === 'null' ? '' : example));
   }

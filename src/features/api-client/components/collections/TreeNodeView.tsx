@@ -24,7 +24,15 @@ interface Props {
   forceExpand?: boolean;
 }
 
-export function TreeNodeView({ node, depth, editingId, setEditingId, onContextMenu, activeSourceId, forceExpand }: Props) {
+export function TreeNodeView({
+  node,
+  depth,
+  editingId,
+  setEditingId,
+  onContextMenu,
+  activeSourceId,
+  forceExpand,
+}: Props) {
   const storeExpanded = useApiStore((s) => !!s.expanded[node.id]);
   const expanded = forceExpand || storeExpanded;
   const toggleExpanded = useApiStore((s) => s.toggleExpanded);
@@ -42,7 +50,10 @@ export function TreeNodeView({ node, depth, editingId, setEditingId, onContextMe
         isEditing={isEditing}
         active={activeSourceId === node.id}
         onOpen={() => openRequestNode(node.id)}
-        onCommit={(name) => { renameNode(node.id, name); setEditingId(null); }}
+        onCommit={(name) => {
+          renameNode(node.id, name);
+          setEditingId(null);
+        }}
         onCancel={() => setEditingId(null)}
         onContextMenu={(e) => onContextMenu(e, { id: node.id, kind: 'request' })}
       />
@@ -57,7 +68,10 @@ export function TreeNodeView({ node, depth, editingId, setEditingId, onContextMe
         expanded={expanded}
         isEditing={isEditing}
         onToggle={() => toggleExpanded(node.id)}
-        onCommit={(name) => { renameNode(node.id, name); setEditingId(null); }}
+        onCommit={(name) => {
+          renameNode(node.id, name);
+          setEditingId(null);
+        }}
         onCancel={() => setEditingId(null)}
         onContextMenu={(e) => onContextMenu(e, { id: node.id, kind: 'folder' })}
       />
@@ -78,7 +92,15 @@ export function TreeNodeView({ node, depth, editingId, setEditingId, onContextMe
   );
 }
 
-function NameEditor({ initial, onCommit, onCancel }: { initial: string; onCommit: (v: string) => void; onCancel: () => void }) {
+function NameEditor({
+  initial,
+  onCommit,
+  onCancel,
+}: {
+  initial: string;
+  onCommit: (v: string) => void;
+  onCancel: () => void;
+}) {
   const [value, setValue] = useState(initial);
   return (
     <input
@@ -132,7 +154,11 @@ function FolderRow({
       >
         <span className="material-symbols-outlined tree-chevron">{expanded ? 'expand_more' : 'chevron_right'}</span>
         <span className="material-symbols-outlined tree-icon">folder</span>
-        {isEditing ? <NameEditor initial={node.name} onCommit={onCommit} onCancel={onCancel} /> : <span className="tree-name">{node.name}</span>}
+        {isEditing ? (
+          <NameEditor initial={node.name} onCommit={onCommit} onCancel={onCancel} />
+        ) : (
+          <span className="tree-name">{node.name}</span>
+        )}
       </div>
     </div>
   );
@@ -170,8 +196,14 @@ function RequestRow({
       {...drag.attributes}
       {...drag.listeners}
     >
-      <span className={`tree-method collection-method ${node.request.method.toLowerCase()}`}>{node.request.method}</span>
-      {isEditing ? <NameEditor initial={node.name} onCommit={onCommit} onCancel={onCancel} /> : <span className="tree-name">{node.name}</span>}
+      <span className={`tree-method collection-method ${node.request.method.toLowerCase()}`}>
+        {node.request.method}
+      </span>
+      {isEditing ? (
+        <NameEditor initial={node.name} onCommit={onCommit} onCancel={onCancel} />
+      ) : (
+        <span className="tree-name">{node.name}</span>
+      )}
     </div>
   );
 }

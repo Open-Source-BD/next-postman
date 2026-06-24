@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeEdit } from './editorKeys';
 
-const at = (value: string, pos: number, key: string) =>
-  computeEdit({ key, value, selStart: pos, selEnd: pos });
+const at = (value: string, pos: number, key: string) => computeEdit({ key, value, selStart: pos, selEnd: pos });
 
 describe('computeEdit', () => {
   it('auto-closes an opening brace', () => {

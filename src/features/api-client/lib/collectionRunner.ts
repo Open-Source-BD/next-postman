@@ -79,9 +79,11 @@ export async function runCollection(cfg: RunConfig): Promise<void> {
         testResults: res.response?.testResults ?? [],
         // The runner never auto-switches transport (deterministic runs). A bot-wall
         // challenge is reported as a failed item; retry it as a single send.
-        error: res.error?.message ?? (res.challenge
-          ? `Blocked by ${res.challenge.vendor} bot wall — retry this request individually to send from your browser`
-          : undefined),
+        error:
+          res.error?.message ??
+          (res.challenge
+            ? `Blocked by ${res.challenge.vendor} bot wall — retry this request individually to send from your browser`
+            : undefined),
       });
       cfg.onProgress(done, total);
     }

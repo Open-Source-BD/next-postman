@@ -30,7 +30,10 @@ function proxyRes(body: string, status = 200, extra: Record<string, unknown> = {
 
 const CF_BODY = '<title>Just a moment...</title> challenges.cloudflare.com';
 
-beforeEach(() => { mockSend.mockReset(); mockDirect.mockReset(); });
+beforeEach(() => {
+  mockSend.mockReset();
+  mockDirect.mockReset();
+});
 
 describe('executeRequest', () => {
   it('happy path returns response and runs tests', async () => {

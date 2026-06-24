@@ -45,7 +45,12 @@ function SaveModalInner({ pending }: { pending: PendingSave }) {
   const canSave = name.trim().length > 0 && selectedId !== null;
 
   return (
-    <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) cancelSave(); }}>
+    <div
+      className="md-modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) cancelSave();
+      }}
+    >
       <div className="md-modal" style={{ maxWidth: '560px', width: '95%' }}>
         <div className="md-modal-header">
           <h3>Save Request</h3>
@@ -73,7 +78,9 @@ function SaveModalInner({ pending }: { pending: PendingSave }) {
               placeholder="New collection name"
               value={newCol}
               onChange={(e) => setNewCol(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') addCollection(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') addCollection();
+              }}
               style={{ flex: 1 }}
             />
             <button className="md-tonal-btn" onClick={addCollection} disabled={!newCol.trim()}>
@@ -87,7 +94,9 @@ function SaveModalInner({ pending }: { pending: PendingSave }) {
               placeholder={selectedId ? 'New folder name' : 'Select a target first'}
               value={newFolder}
               onChange={(e) => setNewFolder(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') addFolder(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') addFolder();
+              }}
               disabled={!selectedId}
               style={{ flex: 1 }}
             />
@@ -97,8 +106,14 @@ function SaveModalInner({ pending }: { pending: PendingSave }) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-            <button className="md-tonal-btn" onClick={cancelSave}>Cancel</button>
-            <button className="md-filled-btn" disabled={!canSave} onClick={() => selectedId && confirmSave(selectedId, name)}>
+            <button className="md-tonal-btn" onClick={cancelSave}>
+              Cancel
+            </button>
+            <button
+              className="md-filled-btn"
+              disabled={!canSave}
+              onClick={() => selectedId && confirmSave(selectedId, name)}
+            >
               Save
             </button>
           </div>

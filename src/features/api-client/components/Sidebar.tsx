@@ -36,9 +36,7 @@ export function Sidebar({ triggerImport, onExport }: SidebarProps) {
           <span className="material-symbols-outlined">upload</span> Export
         </button>
       </div>
-      <div className="sidebar-content">
-        {activeSidebarTab === 'history' ? <HistoryPanel /> : <CollectionsPanel />}
-      </div>
+      <div className="sidebar-content">{activeSidebarTab === 'history' ? <HistoryPanel /> : <CollectionsPanel />}</div>
     </aside>
   );
 }

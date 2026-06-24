@@ -80,7 +80,10 @@ function buildModel(tab: TabState, environments: EnvVar[]): ReqModel {
       body = r(tab.body.rawContent);
       if (!hasHeader('content-type')) headers.push(['Content-Type', tab.body.rawType]);
     } else if (tab.body.type === 'urlencoded') {
-      body = tab.body.urlencoded.filter((u) => u.key).map((u) => `${enc(r(u.key))}=${enc(r(u.value))}`).join('&');
+      body = tab.body.urlencoded
+        .filter((u) => u.key)
+        .map((u) => `${enc(r(u.key))}=${enc(r(u.value))}`)
+        .join('&');
       if (!hasHeader('content-type')) headers.push(['Content-Type', 'application/x-www-form-urlencoded']);
     } else if (tab.body.type === 'formdata') {
       body = tab.body.formdata
@@ -91,7 +94,11 @@ function buildModel(tab: TabState, environments: EnvVar[]): ReqModel {
     } else if (tab.body.type === 'graphql') {
       const g = tab.body.graphql ?? { query: '', variables: '' };
       let vars: unknown = {};
-      try { vars = g.variables.trim() ? JSON.parse(g.variables) : {}; } catch { vars = {}; }
+      try {
+        vars = g.variables.trim() ? JSON.parse(g.variables) : {};
+      } catch {
+        vars = {};
+      }
       body = JSON.stringify({ query: r(g.query), variables: vars });
       if (!hasHeader('content-type')) headers.push(['Content-Type', 'application/json']);
     }
@@ -146,13 +153,15 @@ function go(m: ReqModel): string {
   out += m.body !== null ? `\tpayload := strings.NewReader(\`${m.body}\`)\n` : '\tvar payload io.Reader = nil\n';
   out += `\treq, _ := http.NewRequest("${m.method}", "${dq(m.url)}", payload)\n`;
   m.headers.forEach(([k, v]) => (out += `\treq.Header.Set("${dq(k)}", "${dq(v)}")\n`));
-  out += '\tres, _ := http.DefaultClient.Do(req)\n\tdefer res.Body.Close()\n\tbody, _ := io.ReadAll(res.Body)\n\tfmt.Println(string(body))\n}';
+  out +=
+    '\tres, _ := http.DefaultClient.Do(req)\n\tdefer res.Body.Close()\n\tbody, _ := io.ReadAll(res.Body)\n\tfmt.Println(string(body))\n}';
   return out;
 }
 
 function rust(m: ReqModel): string {
   const method = m.method.charAt(0) + m.method.slice(1).toLowerCase();
-  let out = 'use reqwest::header::HeaderMap;\n\n#[tokio::main]\nasync fn main() -> Result<(), Box<dyn std::error::Error>> {\n';
+  let out =
+    'use reqwest::header::HeaderMap;\n\n#[tokio::main]\nasync fn main() -> Result<(), Box<dyn std::error::Error>> {\n';
   out += '    let client = reqwest::Client::new();\n    let mut headers = HeaderMap::new();\n';
   m.headers.forEach(([k, v]) => (out += `    headers.insert("${dq(k)}", "${dq(v)}".parse()?);\n`));
   out += `    let mut req = client.request(reqwest::Method::${m.method}, "${dq(m.url)}").headers(headers);\n`;
@@ -177,14 +186,16 @@ function php(m: ReqModel): string {
 }
 
 function java(m: ReqModel): string {
-  const bodyPub = m.body !== null ? `HttpRequest.BodyPublishers.ofString("${dq(m.body)}")` : 'HttpRequest.BodyPublishers.noBody()';
+  const bodyPub =
+    m.body !== null ? `HttpRequest.BodyPublishers.ofString("${dq(m.body)}")` : 'HttpRequest.BodyPublishers.noBody()';
   let out = 'import java.net.URI;\nimport java.net.http.*;\n\n';
   out += 'HttpClient client = HttpClient.newHttpClient();\n';
   out += 'HttpRequest request = HttpRequest.newBuilder()\n';
   out += `    .uri(URI.create("${dq(m.url)}"))\n`;
   m.headers.forEach(([k, v]) => (out += `    .header("${dq(k)}", "${dq(v)}")\n`));
   out += `    .method("${m.method}", ${bodyPub})\n    .build();\n\n`;
-  out += 'HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());\nSystem.out.println(response.body());';
+  out +=
+    'HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());\nSystem.out.println(response.body());';
   return out;
 }
 
@@ -206,7 +217,8 @@ function swift(m: ReqModel): string {
   out += `request.httpMethod = "${m.method}"\n`;
   m.headers.forEach(([k, v]) => (out += `request.addValue("${dq(v)}", forHTTPHeaderField: "${dq(k)}")\n`));
   if (m.body !== null) out += `request.httpBody = "${dq(m.body)}".data(using: .utf8)\n`;
-  out += '\nURLSession.shared.dataTask(with: request) { data, _, _ in\n    if let data = data { print(String(data: data, encoding: .utf8) ?? "") }\n}.resume()';
+  out +=
+    '\nURLSession.shared.dataTask(with: request) { data, _, _ in\n    if let data = data { print(String(data: data, encoding: .utf8) ?? "") }\n}.resume()';
   return out;
 }
 
@@ -215,7 +227,8 @@ function csharp(m: ReqModel): string {
   out += `var request = new HttpRequestMessage(new HttpMethod("${m.method}"), "${dq(m.url)}");\n`;
   if (m.body !== null) out += `request.Content = new StringContent("${dq(m.body)}");\n`;
   m.headers.forEach(([k, v]) => (out += `request.Headers.TryAddWithoutValidation("${dq(k)}", "${dq(v)}");\n`));
-  out += '\nvar response = await client.SendAsync(request);\nConsole.WriteLine(await response.Content.ReadAsStringAsync());';
+  out +=
+    '\nvar response = await client.SendAsync(request);\nConsole.WriteLine(await response.Content.ReadAsStringAsync());';
   return out;
 }
 

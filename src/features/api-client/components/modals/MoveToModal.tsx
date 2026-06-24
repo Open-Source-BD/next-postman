@@ -21,7 +21,12 @@ function MoveToModalInner({ moveNodeId }: { moveNodeId: string }) {
   };
 
   return (
-    <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeMoveModal(); }}>
+    <div
+      className="md-modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeMoveModal();
+      }}
+    >
       <div className="md-modal" style={{ maxWidth: '520px', width: '95%' }}>
         <div className="md-modal-header">
           <h3>Move to…</h3>
@@ -33,8 +38,12 @@ function MoveToModalInner({ moveNodeId }: { moveNodeId: string }) {
           <label className="modal-label">Destination</label>
           <TreePicker selectedId={selectedId} onSelect={setSelectedId} excludeNodeId={moveNodeId} />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-            <button className="md-tonal-btn" onClick={closeMoveModal}>Cancel</button>
-            <button className="md-filled-btn" disabled={!selectedId} onClick={onMove}>Move</button>
+            <button className="md-tonal-btn" onClick={closeMoveModal}>
+              Cancel
+            </button>
+            <button className="md-filled-btn" disabled={!selectedId} onClick={onMove}>
+              Move
+            </button>
           </div>
         </div>
       </div>

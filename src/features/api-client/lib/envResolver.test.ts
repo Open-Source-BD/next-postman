@@ -13,9 +13,7 @@ describe('resolveEnv', () => {
   });
 
   it('replaces multiple tokens incl. repeats', () => {
-    expect(resolveEnv('{{host}}/{{ver}}/{{host}}', env)).toBe(
-      'api.example.com/v1/api.example.com'
-    );
+    expect(resolveEnv('{{host}}/{{ver}}/{{host}}', env)).toBe('api.example.com/v1/api.example.com');
   });
 
   it('leaves unknown tokens untouched', () => {

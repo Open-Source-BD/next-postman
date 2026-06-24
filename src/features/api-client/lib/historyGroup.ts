@@ -44,7 +44,5 @@ export function groupHistoryByDate(items: HistoryItem[], now: number): HistoryGr
 export function filterHistory(items: HistoryItem[], query: string): HistoryItem[] {
   const q = query.trim().toLowerCase();
   if (!q) return items;
-  return items.filter(
-    (i) => i.url.toLowerCase().includes(q) || i.method.toLowerCase().includes(q)
-  );
+  return items.filter((i) => i.url.toLowerCase().includes(q) || i.method.toLowerCase().includes(q));
 }

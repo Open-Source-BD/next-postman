@@ -8,7 +8,18 @@ const base = (): TabState => ({
   url: '',
   params: [],
   headers: [],
-  auth: { type: 'none', bearer: '', basicUser: '', basicPass: '', apiKeyName: '', apiKeyValue: '', apiKeyIn: 'header', oauthToken: '', jwtToken: '', jwtPrefix: 'Bearer' },
+  auth: {
+    type: 'none',
+    bearer: '',
+    basicUser: '',
+    basicPass: '',
+    apiKeyName: '',
+    apiKeyValue: '',
+    apiKeyIn: 'header',
+    oauthToken: '',
+    jwtToken: '',
+    jwtPrefix: 'Bearer',
+  },
   body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
   scripts: '',
   tests: '',
@@ -19,7 +30,7 @@ const base = (): TabState => ({
 
 describe('tokenize', () => {
   it('respects quotes and line continuations', () => {
-    expect(tokenize("curl 'http://x' \\\n  -H \"a: b\"")).toEqual(['curl', 'http://x', '-H', 'a: b']);
+    expect(tokenize('curl \'http://x\' \\\n  -H "a: b"')).toEqual(['curl', 'http://x', '-H', 'a: b']);
   });
 });
 

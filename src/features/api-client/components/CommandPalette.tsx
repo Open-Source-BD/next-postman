@@ -41,38 +41,90 @@ function CommandPaletteInner() {
   const listRef = useRef<HTMLDivElement>(null);
 
   const dismiss = () => close(false);
-  const act = (fn: () => void) => () => { dismiss(); fn(); };
+  const act = (fn: () => void) => () => {
+    dismiss();
+    fn();
+  };
 
   const commands: Command[] = [
     { key: 'new-tab', label: 'New request tab', hint: 'create', icon: 'add', run: act(() => s().newTab()) },
     { key: 'save', label: 'Save request', hint: 'save', icon: 'save', run: act(() => s().saveActiveRequest()) },
-    { key: 'curl', label: 'Import cURL', hint: 'import curl', icon: 'terminal', run: act(() => s().setCurlModalOpen(true)) },
-    { key: 'env', label: 'Manage environments', hint: 'environment variables', icon: 'settings', run: act(() => s().setEnvModalOpen(true)) },
-    { key: 'theme', label: 'Toggle light / dark theme', hint: 'theme appearance', icon: 'dark_mode', run: act(() => s().toggleTheme()) },
-    { key: 'workspace', label: 'Connect workspace folder', hint: 'git storage save', icon: 'create_new_folder', run: act(() => s().connectWorkspace()) },
-    { key: 'cookies', label: 'Manage cookies', hint: 'cookie jar session', icon: 'cookie', run: act(() => s().setCookieModalOpen(true)) },
+    {
+      key: 'curl',
+      label: 'Import cURL',
+      hint: 'import curl',
+      icon: 'terminal',
+      run: act(() => s().setCurlModalOpen(true)),
+    },
+    {
+      key: 'env',
+      label: 'Manage environments',
+      hint: 'environment variables',
+      icon: 'settings',
+      run: act(() => s().setEnvModalOpen(true)),
+    },
+    {
+      key: 'theme',
+      label: 'Toggle light / dark theme',
+      hint: 'theme appearance',
+      icon: 'dark_mode',
+      run: act(() => s().toggleTheme()),
+    },
+    {
+      key: 'workspace',
+      label: 'Connect workspace folder',
+      hint: 'git storage save',
+      icon: 'create_new_folder',
+      run: act(() => s().connectWorkspace()),
+    },
+    {
+      key: 'cookies',
+      label: 'Manage cookies',
+      hint: 'cookie jar session',
+      icon: 'cookie',
+      run: act(() => s().setCookieModalOpen(true)),
+    },
     ...environments.map((e) => ({
-      key: `env-${e.id}`, label: `Switch to environment: ${e.name}`, hint: 'environment', icon: 'layers',
+      key: `env-${e.id}`,
+      label: `Switch to environment: ${e.name}`,
+      hint: 'environment',
+      icon: 'layers',
       run: act(() => s().setActiveEnv(e.id)),
     })),
-    { key: 'env-none', label: 'Switch to: No Environment', hint: 'environment', icon: 'layers_clear', run: act(() => s().setActiveEnv(null)) },
+    {
+      key: 'env-none',
+      label: 'Switch to: No Environment',
+      hint: 'environment',
+      icon: 'layers_clear',
+      run: act(() => s().setActiveEnv(null)),
+    },
     ...collectRequests(collections).map((r) => ({
-      key: `req-${r.id}`, label: r.name, hint: r.trail, icon: 'http',
+      key: `req-${r.id}`,
+      label: r.name,
+      hint: r.trail,
+      icon: 'http',
       run: act(() => s().openRequestNode(r.id)),
     })),
   ];
 
   const q = query.trim().toLowerCase();
-  const results = q
-    ? commands.filter((c) => `${c.label} ${c.hint}`.toLowerCase().includes(q))
-    : commands;
+  const results = q ? commands.filter((c) => `${c.label} ${c.hint}`.toLowerCase().includes(q)) : commands;
   const clampedSel = Math.min(sel, Math.max(0, results.length - 1));
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { e.preventDefault(); dismiss(); }
-    else if (e.key === 'ArrowDown') { e.preventDefault(); setSel((i) => Math.min(i + 1, results.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setSel((i) => Math.max(i - 1, 0)); }
-    else if (e.key === 'Enter') { e.preventDefault(); results[clampedSel]?.run(); }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      dismiss();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSel((i) => Math.min(i + 1, results.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSel((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      results[clampedSel]?.run();
+    }
   };
 
   useEffect(() => {
@@ -81,14 +133,22 @@ function CommandPaletteInner() {
   }, [clampedSel]);
 
   return (
-    <div className="md-modal-overlay cmdk-overlay" onClick={(e) => { if (e.target === e.currentTarget) dismiss(); }}>
+    <div
+      className="md-modal-overlay cmdk-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) dismiss();
+      }}
+    >
       <div className="cmdk" role="dialog" aria-modal="true" aria-label="Command palette">
         <input
           className="cmdk-input"
           autoFocus
           placeholder="Search requests, environments, actions…"
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setSel(0); }}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setSel(0);
+          }}
           onKeyDown={onKeyDown}
           aria-activedescendant={results[clampedSel] ? `cmdk-${results[clampedSel].key}` : undefined}
           role="combobox"
@@ -107,7 +167,9 @@ function CommandPaletteInner() {
               onMouseEnter={() => setSel(i)}
               onClick={c.run}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{c.icon}</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                {c.icon}
+              </span>
               <span className="cmdk-label">{c.label}</span>
               {c.hint && <span className="cmdk-hint">{c.hint}</span>}
             </button>

@@ -79,7 +79,10 @@ export async function zipFiles(files: FileEntry[], opts: { compress?: boolean } 
   const chunks: Uint8Array[] = [];
   let offset = 0;
 
-  const emit = (b: Uint8Array) => { chunks.push(b); offset += b.length; };
+  const emit = (b: Uint8Array) => {
+    chunks.push(b);
+    offset += b.length;
+  };
 
   for (const file of files) {
     const nameBytes = enc.encode(file.path);
@@ -98,24 +101,29 @@ export async function zipFiles(files: FileEntry[], opts: { compress?: boolean } 
     }
 
     const local: Local = {
-      nameBytes, data, crc, method,
-      compSize: data.length, uncompSize: raw.length, offset,
+      nameBytes,
+      data,
+      crc,
+      method,
+      compSize: data.length,
+      uncompSize: raw.length,
+      offset,
     };
     locals.push(local);
 
     const header = new Uint8Array(30 + nameBytes.length);
     const v = new DataView(header.buffer);
     v.setUint32(0, LOCAL_SIG, true);
-    v.setUint16(4, 20, true);          // version needed
-    v.setUint16(6, 0x0800, true);       // UTF-8 filename flag
+    v.setUint16(4, 20, true); // version needed
+    v.setUint16(6, 0x0800, true); // UTF-8 filename flag
     v.setUint16(8, method, true);
-    v.setUint16(10, 0, true);           // time
-    v.setUint16(12, DOS_DATE, true);    // date
+    v.setUint16(10, 0, true); // time
+    v.setUint16(12, DOS_DATE, true); // date
     v.setUint32(14, crc, true);
     v.setUint32(18, local.compSize, true);
     v.setUint32(22, local.uncompSize, true);
     v.setUint16(26, nameBytes.length, true);
-    v.setUint16(28, 0, true);           // extra len
+    v.setUint16(28, 0, true); // extra len
     header.set(nameBytes, 30);
     emit(header);
     emit(data);
@@ -127,22 +135,22 @@ export async function zipFiles(files: FileEntry[], opts: { compress?: boolean } 
     const rec = new Uint8Array(46 + l.nameBytes.length);
     const v = new DataView(rec.buffer);
     v.setUint32(0, CENTRAL_SIG, true);
-    v.setUint16(4, 20, true);           // version made by
-    v.setUint16(6, 20, true);           // version needed
-    v.setUint16(8, 0x0800, true);       // UTF-8 flag
+    v.setUint16(4, 20, true); // version made by
+    v.setUint16(6, 20, true); // version needed
+    v.setUint16(8, 0x0800, true); // UTF-8 flag
     v.setUint16(10, l.method, true);
-    v.setUint16(12, 0, true);           // time
-    v.setUint16(14, DOS_DATE, true);    // date
+    v.setUint16(12, 0, true); // time
+    v.setUint16(14, DOS_DATE, true); // date
     v.setUint32(16, l.crc, true);
     v.setUint32(20, l.compSize, true);
     v.setUint32(24, l.uncompSize, true);
     v.setUint16(28, l.nameBytes.length, true);
-    v.setUint16(30, 0, true);           // extra len
-    v.setUint16(32, 0, true);           // comment len
-    v.setUint16(34, 0, true);           // disk number
-    v.setUint16(36, 0, true);           // internal attrs
-    v.setUint32(38, 0, true);           // external attrs
-    v.setUint32(42, l.offset, true);    // local header offset
+    v.setUint16(30, 0, true); // extra len
+    v.setUint16(32, 0, true); // comment len
+    v.setUint16(34, 0, true); // disk number
+    v.setUint16(36, 0, true); // internal attrs
+    v.setUint32(38, 0, true); // external attrs
+    v.setUint32(42, l.offset, true); // local header offset
     rec.set(l.nameBytes, 46);
     emit(rec);
   }
@@ -151,8 +159,8 @@ export async function zipFiles(files: FileEntry[], opts: { compress?: boolean } 
   const eocd = new Uint8Array(22);
   const ev = new DataView(eocd.buffer);
   ev.setUint32(0, EOCD_SIG, true);
-  ev.setUint16(8, locals.length, true);   // entries on this disk
-  ev.setUint16(10, locals.length, true);  // total entries
+  ev.setUint16(8, locals.length, true); // entries on this disk
+  ev.setUint16(10, locals.length, true); // total entries
   ev.setUint32(12, cdSize, true);
   ev.setUint32(16, cdStart, true);
   emit(eocd);
@@ -168,7 +176,10 @@ export async function unzipFiles(buffer: ArrayBuffer): Promise<FileEntry[]> {
   // Find the End Of Central Directory record (scan back past any zip comment).
   let eocd = -1;
   for (let i = bytes.length - 22; i >= 0; i--) {
-    if (v.getUint32(i, true) === EOCD_SIG) { eocd = i; break; }
+    if (v.getUint32(i, true) === EOCD_SIG) {
+      eocd = i;
+      break;
+    }
   }
   if (eocd < 0) throw new Error('Not a valid zip file (no end-of-central-directory record).');
 

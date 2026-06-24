@@ -66,7 +66,11 @@ export function VarInput({ value, onValueChange, className, placeholder, spellCh
 
   const recompute = (text: string, caret: number) => {
     const token = openToken(text, caret);
-    if (!token) { setTokenStart(null); setMatches([]); return; }
+    if (!token) {
+      setTokenStart(null);
+      setMatches([]);
+      return;
+    }
     const m = varNames.filter((n) => n.toLowerCase().includes(token.partial.toLowerCase())).slice(0, 8);
     setTokenStart(m.length ? token.start : null);
     setMatches(m);
@@ -85,10 +89,20 @@ export function VarInput({ value, onValueChange, className, placeholder, spellCh
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); setSel((i) => Math.min(i + 1, matches.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setSel((i) => Math.max(i - 1, 0)); }
-    else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); insert(matches[clampedSel]); }
-    else if (e.key === 'Escape') { e.preventDefault(); setTokenStart(null); setMatches([]); }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSel((i) => Math.min(i + 1, matches.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSel((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      insert(matches[clampedSel]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setTokenStart(null);
+      setMatches([]);
+    }
   };
 
   return (
@@ -106,11 +120,24 @@ export function VarInput({ value, onValueChange, className, placeholder, spellCh
         placeholder={placeholder}
         spellCheck={spellCheck}
         aria-label={rest['aria-label']}
-        onChange={(e) => { onValueChange(e.target.value); recompute(e.target.value, e.target.selectionStart ?? e.target.value.length); syncScroll(); }}
+        onChange={(e) => {
+          onValueChange(e.target.value);
+          recompute(e.target.value, e.target.selectionStart ?? e.target.value.length);
+          syncScroll();
+        }}
         onScroll={syncScroll}
-        onKeyUp={(e) => { syncScroll(); if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') recompute(value, e.currentTarget.selectionStart ?? value.length); }}
+        onKeyUp={(e) => {
+          syncScroll();
+          if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End')
+            recompute(value, e.currentTarget.selectionStart ?? value.length);
+        }}
         onKeyDown={onKeyDown}
-        onBlur={() => setTimeout(() => { setTokenStart(null); setMatches([]); }, 120)}
+        onBlur={() =>
+          setTimeout(() => {
+            setTokenStart(null);
+            setMatches([]);
+          }, 120)
+        }
       />
       {open && (
         <div className="var-suggest" role="listbox">
@@ -120,7 +147,10 @@ export function VarInput({ value, onValueChange, className, placeholder, spellCh
               role="option"
               aria-selected={i === clampedSel}
               className={`var-suggest-row ${i === clampedSel ? 'active' : ''}`}
-              onMouseDown={(e) => { e.preventDefault(); insert(name); }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                insert(name);
+              }}
               onMouseEnter={() => setSel(i)}
             >
               <span className="var-suggest-name">{`{{${name}}}`}</span>

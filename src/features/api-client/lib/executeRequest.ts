@@ -55,7 +55,7 @@ const DIRECT_FAIL_MSG =
 export async function executeRequest(
   tab: TabState,
   seedVars: EnvVar[],
-  opts: ExecuteOptions = {}
+  opts: ExecuteOptions = {},
 ): Promise<ExecuteResult> {
   const sandbox = new PmSandbox(seedVars, opts.onSetVar ?? (() => {}), opts.iterationData);
 
@@ -119,7 +119,11 @@ export async function executeRequest(
 
     // Not auto-retried (unsafe method, cookie conflict, or fallback off) — let the
     // caller decide whether to show a Retry button or a failed run item.
-    return { response: null, finalUrl: proxied.finalUrl, challenge: { vendor: challenge.vendor, method: tab.method, directEligible } };
+    return {
+      response: null,
+      finalUrl: proxied.finalUrl,
+      challenge: { vendor: challenge.vendor, method: tab.method, directEligible },
+    };
   } catch (e) {
     const wasAborted = (e as Error).name === 'AbortError' || aborted();
     return {

@@ -37,22 +37,18 @@ export function isDescendant(node: TreeNode, id: string): boolean {
 
 // --- Container child mutation (a container is a collection root or a folder) ---
 
-function mapContainer(
-  cols: Collection[],
-  containerId: string,
-  fn: (children: TreeNode[]) => TreeNode[]
-): Collection[] {
+function mapContainer(cols: Collection[], containerId: string, fn: (children: TreeNode[]) => TreeNode[]): Collection[] {
   return cols.map((col) =>
     col.id === containerId
       ? { ...col, children: fn(col.children) }
-      : { ...col, children: mapFolderContainer(col.children, containerId, fn) }
+      : { ...col, children: mapFolderContainer(col.children, containerId, fn) },
   );
 }
 
 function mapFolderContainer(
   nodes: TreeNode[],
   containerId: string,
-  fn: (children: TreeNode[]) => TreeNode[]
+  fn: (children: TreeNode[]) => TreeNode[],
 ): TreeNode[] {
   return nodes.map((n) => {
     if (n.type !== 'folder') return n;
@@ -63,12 +59,7 @@ function mapFolderContainer(
 
 // --- Insert / remove / update ---
 
-export function insertNode(
-  cols: Collection[],
-  parentId: string,
-  node: TreeNode,
-  index?: number
-): Collection[] {
+export function insertNode(cols: Collection[], parentId: string, node: TreeNode, index?: number): Collection[] {
   return mapContainer(cols, parentId, (children) => {
     const next = [...children];
     next.splice(index ?? next.length, 0, node);
@@ -89,16 +80,12 @@ function removeFromNodes(nodes: TreeNode[], id: string): TreeNode[] {
 export function updateNode(
   cols: Collection[],
   id: string,
-  patch: Partial<FolderNode> & Partial<RequestNode>
+  patch: Partial<FolderNode> & Partial<RequestNode>,
 ): Collection[] {
   return cols.map((col) => ({ ...col, children: patchNodes(col.children, id, patch) }));
 }
 
-function patchNodes(
-  nodes: TreeNode[],
-  id: string,
-  patch: Partial<FolderNode> & Partial<RequestNode>
-): TreeNode[] {
+function patchNodes(nodes: TreeNode[], id: string, patch: Partial<FolderNode> & Partial<RequestNode>): TreeNode[] {
   return nodes.map((n) => {
     if (n.id === id) return { ...n, ...patch } as TreeNode;
     if (n.type === 'folder') return { ...n, children: patchNodes(n.children, id, patch) };
@@ -108,12 +95,7 @@ function patchNodes(
 
 // --- Move ---
 
-export function moveNode(
-  cols: Collection[],
-  nodeId: string,
-  targetParentId: string,
-  index?: number
-): Collection[] {
+export function moveNode(cols: Collection[], nodeId: string, targetParentId: string, index?: number): Collection[] {
   const node = findNode(cols, nodeId);
   if (!node) return cols;
   // Block dropping a folder into itself or a descendant.

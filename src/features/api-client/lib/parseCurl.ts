@@ -28,7 +28,11 @@ export function tokenize(input: string): string[] {
       quote = c;
       started = true;
     } else if (/\s/.test(c)) {
-      if (started) { out.push(cur); cur = ''; started = false; }
+      if (started) {
+        out.push(cur);
+        cur = '';
+        started = false;
+      }
     } else {
       cur += c;
       started = true;
@@ -42,8 +46,24 @@ const kv = (k: string, v: string) => ({ id: generateId(), key: k, value: v, type
 
 /** Flags that consume the following token as their value. */
 const VALUE_FLAGS = new Set([
-  '-X', '--request', '-H', '--header', '-d', '--data', '--data-raw', '--data-binary',
-  '--data-urlencode', '-u', '--user', '--url', '-b', '--cookie', '-A', '--user-agent', '-e', '--referer',
+  '-X',
+  '--request',
+  '-H',
+  '--header',
+  '-d',
+  '--data',
+  '--data-raw',
+  '--data-binary',
+  '--data-urlencode',
+  '-u',
+  '--user',
+  '--url',
+  '-b',
+  '--cookie',
+  '-A',
+  '--user-agent',
+  '-e',
+  '--referer',
 ]);
 
 /** Parse a curl command into a TabState, layered onto `base` (e.g. createDefaultTab()). */

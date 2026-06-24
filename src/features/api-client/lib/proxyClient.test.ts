@@ -5,10 +5,18 @@ import type { TabState } from '../types';
 
 const tab = (over: Partial<TabState> = {}): TabState =>
   ({
-    id: 't', method: 'GET', url: 'https://api.example.com/x',
-    params: [], headers: [], auth: { type: 'none' } as TabState['auth'],
+    id: 't',
+    method: 'GET',
+    url: 'https://api.example.com/x',
+    params: [],
+    headers: [],
+    auth: { type: 'none' } as TabState['auth'],
     body: { type: 'none', formdata: [], urlencoded: [], rawContent: '', rawType: 'application/json' },
-    scripts: '', tests: '', response: null, activeSubTab: 'params', activeResTab: 'body',
+    scripts: '',
+    tests: '',
+    response: null,
+    activeSubTab: 'params',
+    activeResTab: 'body',
     ...over,
   }) as TabState;
 
@@ -33,11 +41,18 @@ describe('sanitizeDirectHeaders', () => {
 
 describe('sendDirect', () => {
   it('maps a fetch Response to a direct ProxyResult, client-timed', async () => {
-    const res = new Response('{"ok":true}', { status: 200, statusText: 'OK', headers: { 'content-type': 'application/json' } });
+    const res = new Response('{"ok":true}', {
+      status: 200,
+      statusText: 'OK',
+      headers: { 'content-type': 'application/json' },
+    });
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(res);
 
     const out = await sendDirect(tab(), []);
-    expect(fetchSpy).toHaveBeenCalledWith('https://api.example.com/x', expect.objectContaining({ method: 'GET', credentials: 'omit' }));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.com/x',
+      expect.objectContaining({ method: 'GET', credentials: 'omit' }),
+    );
     expect(out.transport).toBe('direct');
     expect(out.status).toBe(200);
     expect(out.rawText).toBe('{"ok":true}');
@@ -55,7 +70,19 @@ describe('sendDirect', () => {
 
   it('lets the browser set the multipart boundary (no Content-Type) for form-data', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
-    await sendDirect(tab({ method: 'POST', body: { type: 'formdata', formdata: [{ id: 'k', key: 'f', value: 'x', type: 'text' }], urlencoded: [], rawContent: '', rawType: 'application/json' } }), []);
+    await sendDirect(
+      tab({
+        method: 'POST',
+        body: {
+          type: 'formdata',
+          formdata: [{ id: 'k', key: 'f', value: 'x', type: 'text' }],
+          urlencoded: [],
+          rawContent: '',
+          rawType: 'application/json',
+        },
+      }),
+      [],
+    );
     const passedHeaders = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Headers;
     expect(passedHeaders.has('content-type')).toBe(false);
   });
@@ -113,7 +140,19 @@ describe('sendViaProxy', () => {
 
   it('lets the browser set the multipart boundary (no Content-Type) for form-data', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
-    await sendViaProxy(tab({ method: 'POST', body: { type: 'formdata', formdata: [{ id: 'k', key: 'f', value: 'x', type: 'text' }], urlencoded: [], rawContent: '', rawType: 'application/json' } }), []);
+    await sendViaProxy(
+      tab({
+        method: 'POST',
+        body: {
+          type: 'formdata',
+          formdata: [{ id: 'k', key: 'f', value: 'x', type: 'text' }],
+          urlencoded: [],
+          rawContent: '',
+          rawType: 'application/json',
+        },
+      }),
+      [],
+    );
 
     const callHeaders = (vi.mocked(fetch).mock.calls[0][1] as RequestInit).headers as Headers;
     expect(callHeaders.has('Content-Type')).toBe(false);
@@ -122,11 +161,16 @@ describe('sendViaProxy', () => {
   it('propagates the abort signal to the proxy fetch', async () => {
     const ctrl = new AbortController();
     vi.spyOn(globalThis, 'fetch').mockImplementation(
-      (_url, opts) => new Promise<Response>((_resolve, reject) => {
-        if (opts?.signal) {
-          (opts.signal as AbortSignal).addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
-        }
-      })
+      (_url, opts) =>
+        new Promise<Response>((_resolve, reject) => {
+          if (opts?.signal) {
+            (opts.signal as AbortSignal).addEventListener(
+              'abort',
+              () => reject(new DOMException('Aborted', 'AbortError')),
+              { once: true },
+            );
+          }
+        }),
     );
     setTimeout(() => ctrl.abort(), 5);
 

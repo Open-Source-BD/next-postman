@@ -16,7 +16,14 @@ interface ContextMenuProps {
 
 export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   return (
-    <div className="context-menu-backdrop" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }}>
+    <div
+      className="context-menu-backdrop"
+      onClick={onClose}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+    >
       <div className="context-menu" style={{ top: y, left: x }} onClick={(e) => e.stopPropagation()}>
         {items.map((item) => (
           <button

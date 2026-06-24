@@ -21,7 +21,12 @@ function CurlModalInner() {
   };
 
   return (
-    <div className="md-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+    <div
+      className="md-modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setOpen(false);
+      }}
+    >
       <div className="md-modal" style={{ maxWidth: '640px', width: '95%' }}>
         <div className="md-modal-header">
           <h3>Import cURL</h3>
@@ -40,8 +45,12 @@ function CurlModalInner() {
             style={{ width: '100%', minHeight: '160px', fontFamily: 'var(--mono-font)', marginBottom: '16px' }}
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-            <button className="md-tonal-btn" onClick={() => setOpen(false)}>Cancel</button>
-            <button className="md-filled-btn" onClick={doImport} disabled={!text.trim()}>Import</button>
+            <button className="md-tonal-btn" onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+            <button className="md-filled-btn" onClick={doImport} disabled={!text.trim()}>
+              Import
+            </button>
           </div>
         </div>
       </div>

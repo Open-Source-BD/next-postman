@@ -48,17 +48,32 @@ export function JsonTree({ data, rawText, query }: JsonTreeProps) {
     <div className="json-tree-view">
       <div className="jt-toolbar">
         <button className="jt-tool-btn" onClick={() => setAll(true)} title="Expand all">
-          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>unfold_more</span> Expand
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+            unfold_more
+          </span>{' '}
+          Expand
         </button>
         <button className="jt-tool-btn" onClick={() => setAll(false)} title="Collapse all">
-          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>unfold_less</span> Collapse
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+            unfold_less
+          </span>{' '}
+          Collapse
         </button>
         <button className="jt-tool-btn jt-copy" onClick={copy} title="Copy">
-          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{copied ? 'check' : 'content_copy'}</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+            {copied ? 'check' : 'content_copy'}
+          </span>
         </button>
       </div>
       <div className="jt-scroll">
-        <JsonNode key={`${version}-${q ?? ''}`} keyName={undefined} value={view} depth={0} isLast defaultOpen={defaultOpen} />
+        <JsonNode
+          key={`${version}-${q ?? ''}`}
+          keyName={undefined}
+          value={view}
+          depth={0}
+          isLast
+          defaultOpen={defaultOpen}
+        />
       </div>
     </div>
   );

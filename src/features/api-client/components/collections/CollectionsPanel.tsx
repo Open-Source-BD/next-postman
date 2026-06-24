@@ -2,14 +2,7 @@
 /* eslint-disable react-hooks/refs -- dnd-kit's useDroppable returns setNodeRef/isOver
    that the React Compiler lint mis-classifies as refs; reading them in render is intended. */
 import { useState } from 'react';
-import {
-  DndContext,
-  PointerSensor,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
+import { DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import type { Collection, TreeNode } from '../../types';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
 import { exportPostman } from '../../lib/importExport';
@@ -88,7 +81,9 @@ export function CollectionsPanel() {
         <div className="tree-scroll">
           {visible.length === 0 && (
             <div className="sidebar-empty">
-              <span className="material-symbols-outlined" style={{ fontSize: '36px', opacity: 0.5 }}>folder_open</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '36px', opacity: 0.5 }}>
+                folder_open
+              </span>
               <span>No collections. Create one to save requests.</span>
             </div>
           )}
@@ -156,7 +151,11 @@ function CollectionRoot({
             autoFocus
             defaultValue={collection.name}
             onClick={(e) => e.stopPropagation()}
-            onBlur={(e) => { const v = e.target.value.trim(); if (v) renameCollection(collection.id, v); setEditingId(null); }}
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v) renameCollection(collection.id, v);
+              setEditingId(null);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
               else if (e.key === 'Escape') setEditingId(null);
