@@ -71,6 +71,7 @@ export function importFromDoc(json: unknown): ParsedImport {
     return { collections: [collection], environments };
   }
 
+  if (!json || typeof json !== 'object') return { collections: [], environments: [] };
   const data = json as Partial<ExportData>;
   return {
     collections: migrateCollections(data.collections ?? []),
