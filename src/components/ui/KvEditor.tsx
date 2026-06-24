@@ -1,15 +1,23 @@
 'use client';
 import type { ReactNode } from 'react';
-import type { KvItem } from '../types';
-import { generateId } from '../lib/id';
+
+interface KvItem {
+  id: string;
+  key: string;
+  value: string;
+  type?: 'text' | 'file';
+  file?: File | null;
+}
 
 interface KvEditorProps {
   items: KvItem[];
   onChange: (items: KvItem[]) => void;
   allowFile?: boolean;
-  /** Optional per-row control rendered before the delete button (e.g. env move/copy). */
   renderRowExtra?: (item: KvItem, index: number) => ReactNode;
 }
+
+let _id = 0;
+const uid = () => `kv-${Date.now().toString(36)}-${++_id}`;
 
 export function KvEditor({ items, onChange, allowFile = false, renderRowExtra }: KvEditorProps) {
   const patch = (idx: number, updates: Partial<KvItem>) => {
@@ -62,7 +70,7 @@ export function KvEditor({ items, onChange, allowFile = false, renderRowExtra }:
       ))}
       <button
         className="md-text-btn add-row-btn"
-        onClick={() => onChange([...items, { id: generateId(), key: '', value: '', type: 'text' }])}
+        onClick={() => onChange([...items, { id: uid(), key: '', value: '', type: 'text' }])}
       >
         <span className="material-symbols-outlined">add</span> Add Row
       </button>

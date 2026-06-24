@@ -1,6 +1,6 @@
 'use client';
 import { useApiStore } from '../../store/useApiStore';
-import { ResponsePane } from '../ResponsePane';
+import { ResponsePane } from '../response/ResponsePane';
 
 export function ResponseModal() {
   const isOpen = useApiStore((s) => s.isResponseModalOpen);

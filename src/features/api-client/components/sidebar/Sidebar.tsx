@@ -1,7 +1,7 @@
 'use client';
-import { useApiStore } from '../store/useApiStore';
-import { CollectionsPanel } from './collections/CollectionsPanel';
-import { HistoryPanel } from './history/HistoryPanel';
+import { useApiStore } from '../../store/useApiStore';
+import { CollectionsPanel } from '../collections/CollectionsPanel';
+import { HistoryPanel } from './HistoryPanel';
 
 interface SidebarProps {
   triggerImport: () => void;

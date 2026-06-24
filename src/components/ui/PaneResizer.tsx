@@ -1,11 +1,9 @@
 'use client';
 
 interface PaneResizerProps {
-  /** Called with the pointer's clientY on each move while dragging. */
   onDrag: (clientY: number) => void;
 }
 
-/** Horizontal divider; drag vertically to resize the panes above/below it. */
 export function PaneResizer({ onDrag }: PaneResizerProps) {
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();

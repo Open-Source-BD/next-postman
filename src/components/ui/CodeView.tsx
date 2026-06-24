@@ -2,11 +2,8 @@
 import { useState } from 'react';
 
 interface CodeViewProps {
-  /** Raw text (used for line count + copy). */
   text: string;
-  /** Optional pre-highlighted HTML to render instead of plain text. */
   html?: string;
-  /** Wrap long lines instead of scrolling horizontally (response Raw view). */
   wrap?: boolean;
 }
 

@@ -1,15 +1,14 @@
 'use client';
 import React, { useState } from 'react';
-import { selectActiveTab, useApiStore } from '../store/useApiStore';
-import { formatSize } from '../lib/format';
-import { syntaxHighlight } from '../lib/syntaxHighlight';
-import { generateTypes, TYPE_LANGS, type TypeLang } from '../lib/jsonToTypes';
-import { parseSetCookie } from '../lib/cookies';
-import { diffLines, diffStats } from '../lib/diffLines';
-import { CodeView } from './CodeView';
-import { JsonTree } from './JsonTree';
-import { executeActiveSend } from '../lib/sendActive';
-import { parseJsonBody } from '../lib/parseJsonBody';
+import { selectActiveTab, useApiStore } from '../../store/useApiStore';
+import { formatSize } from '../../lib/format';
+import { syntaxHighlight } from '../../lib/syntaxHighlight';
+import { generateTypes, TYPE_LANGS, type TypeLang } from '../../lib/jsonToTypes';
+import { parseSetCookie } from '../../lib/cookies';
+import { diffLines, diffStats } from '../../lib/diffLines';
+import { parseJsonBody } from '../../lib/parseJsonBody';
+import { executeActiveSend } from '../../lib/sendActive';
+import { CodeView, JsonTree } from '@/components/ui';
 
 /** Pretty-print a body for stable diffing (indented JSON when parseable). */
 function prettyBody(rawText: string | undefined): string {

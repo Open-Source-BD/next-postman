@@ -1,13 +1,13 @@
 'use client';
-import type { RequestSubTab } from '../types';
-import { selectActiveTab, useApiStore } from '../store/useApiStore';
+import type { RequestSubTab } from '../../types';
+import { selectActiveTab, useApiStore } from '../../store/useApiStore';
 import { UrlBar } from './UrlBar';
-import { ParamsTab } from './tabs/ParamsTab';
-import { AuthTab } from './tabs/AuthTab';
-import { HeadersTab } from './tabs/HeadersTab';
-import { BodyTab } from './tabs/BodyTab';
-import { ScriptsTab } from './tabs/ScriptsTab';
-import { TestsTab } from './tabs/TestsTab';
+import { ParamsTab } from '../tabs/ParamsTab';
+import { AuthTab } from '../tabs/AuthTab';
+import { HeadersTab } from '../tabs/HeadersTab';
+import { BodyTab } from '../tabs/BodyTab';
+import { ScriptsTab } from '../tabs/ScriptsTab';
+import { TestsTab } from '../tabs/TestsTab';
 
 const SUB_TABS: RequestSubTab[] = ['params', 'auth', 'headers', 'body', 'scripts', 'tests'];
 

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { selectActiveTab, useApiStore } from '../store/useApiStore';
-import { UrlBar } from './UrlBar';
+import { selectActiveTab, useApiStore } from '../../store/useApiStore';
+import { UrlBar } from '../request/UrlBar';
 
 const STATUS_META: Record<string, { label: string; icon: string; color: string }> = {
   idle: { label: 'Not connected', icon: 'radio_button_unchecked', color: 'var(--md-sys-color-on-surface-variant)' },

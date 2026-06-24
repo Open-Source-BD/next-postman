@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApiStore } from '../../store/useApiStore';
-import { KvEditor } from '../KvEditor';
+import { KvEditor } from '@/components/ui';
 import type { EnvVar } from '../../types';
 
 const GLOBALS = '__globals__';

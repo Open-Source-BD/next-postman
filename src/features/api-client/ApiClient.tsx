@@ -1,11 +1,11 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { PaneResizer } from './components/PaneResizer';
-import { RequestPane } from './components/RequestPane';
-import { RequestTabsBar } from './components/RequestTabsBar';
-import { ResponsePane } from './components/ResponsePane';
-import { RealtimePane } from './components/RealtimePane';
-import { Sidebar } from './components/Sidebar';
+import { PaneResizer } from '@/components/ui';
+import { RequestPane } from './components/request/RequestPane';
+import { RequestTabsBar } from './components/tabs/RequestTabsBar';
+import { ResponsePane } from './components/response/ResponsePane';
+import { RealtimePane } from './components/realtime/RealtimePane';
+import { Sidebar } from './components/sidebar/Sidebar';
 import { TopBar } from './components/TopBar';
 import { CloseTabModal } from './components/modals/CloseTabModal';
 import { CodeModal } from './components/modals/CodeModal';

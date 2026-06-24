@@ -1,7 +1,7 @@
 'use client';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
 import { CODE_LANGS, generateCode } from '../../lib/codegen';
-import { CodeView } from '../CodeView';
+import { CodeView } from '@/components/ui';
 
 export function CodeModal() {
   const isOpen = useApiStore((s) => s.isCodeModalOpen);

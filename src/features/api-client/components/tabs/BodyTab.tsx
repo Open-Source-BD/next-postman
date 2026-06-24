@@ -1,9 +1,8 @@
 'use client';
 import type { BodyType, RawType } from '../../types';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
-import { KvEditor } from '../KvEditor';
-import { CodeTextarea } from '../CodeTextarea';
-import type { EditorLang } from '../../lib/editorKeys';
+import { KvEditor, CodeTextarea } from '@/components/ui';
+import type { EditorLang } from '@/components/ui';
 import { beautify } from '../../lib/format';
 
 const RAW_LANG: Record<RawType, EditorLang> = {

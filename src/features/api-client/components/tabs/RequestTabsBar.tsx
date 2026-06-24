@@ -1,7 +1,7 @@
 'use client';
-import type { TabState } from '../types';
-import { useApiStore } from '../store/useApiStore';
-import { isTabDirty } from '../lib/tabDirty';
+import type { TabState } from '../../types';
+import { useApiStore } from '../../store/useApiStore';
+import { isTabDirty } from '../../lib/tabDirty';
 
 export function RequestTabsBar() {
   const tabs = useApiStore((s) => s.tabs);

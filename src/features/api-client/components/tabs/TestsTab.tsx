@@ -1,6 +1,6 @@
 'use client';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
-import { CodeTextarea } from '../CodeTextarea';
+import { CodeTextarea } from '@/components/ui';
 
 export function TestsTab() {
   const tab = useApiStore(selectActiveTab);

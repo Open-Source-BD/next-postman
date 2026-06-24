@@ -1,6 +1,6 @@
 'use client';
 import { selectActiveTab, useApiStore } from '../../store/useApiStore';
-import { KvEditor } from '../KvEditor';
+import { KvEditor } from '@/components/ui';
 
 export function HeadersTab() {
   const tab = useApiStore(selectActiveTab);

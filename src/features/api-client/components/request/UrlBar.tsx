@@ -1,6 +1,6 @@
 'use client';
-import type { HttpMethod, Protocol } from '../types';
-import { selectActiveTab, useApiStore } from '../store/useApiStore';
+import type { HttpMethod, Protocol } from '../../types';
+import { selectActiveTab, useApiStore } from '../../store/useApiStore';
 import { VarInput } from './VarInput';
 
 const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];

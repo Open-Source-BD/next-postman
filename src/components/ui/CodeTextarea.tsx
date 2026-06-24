@@ -1,5 +1,5 @@
 'use client';
-import { computeEdit, type EditorLang } from '../lib/editorKeys';
+import { computeEdit, type EditorLang } from './editorKeys';
 
 type Props = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'> & {
   value: string;
@@ -7,7 +7,6 @@ type Props = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | '
   language?: EditorLang;
 };
 
-/** Textarea with code-editor key handling: auto-pairing, overtype, tag-close, smart Enter/Tab. */
 export function CodeTextarea({ value, onChange, language = 'js', ...rest }: Props) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const el = e.currentTarget;

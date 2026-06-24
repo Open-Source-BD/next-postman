@@ -3,9 +3,7 @@ import { useState } from 'react';
 
 interface JsonTreeProps {
   data: unknown;
-  /** Pretty-printed text for the copy button. */
   rawText: string;
-  /** Optional case-insensitive filter on keys/values. */
   query?: string;
 }
 

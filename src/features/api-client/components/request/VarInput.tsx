@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { useApiStore } from '../store/useApiStore';
+import { useApiStore } from '../../store/useApiStore';
 
 interface VarInputProps {
   value: string;
