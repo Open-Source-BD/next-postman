@@ -1,10 +1,38 @@
-# next-postman
+<p align="center">
+  <picture>
+    <img alt="next-postman" src="docs/screenshot.png" width="720">
+  </picture>
+</p>
 
-A free, local-first **Postman alternative** built with Next.js. Send HTTP requests, run collections, stream WebSocket/SSE, generate code and types — all in the browser, with no account, no cloud sync, and no lock-in.
+<h1 align="center">next-postman</h1>
+
+<p align="center">
+  A free, local-first <strong>Postman alternative</strong> built with Next.js.
+  <br>
+  Send HTTP requests, run collections, stream WebSocket/SSE, generate code and types —
+  <br>
+  all in the browser, with no account, no cloud sync, and no lock-in.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Open-Source-BD/next-postman/actions/workflows/ci.yml">
+    <img src="https://github.com/Open-Source-BD/next-postman/actions/workflows/ci.yml/badge.svg" alt="CI">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+  </a>
+  <a href=".nvmrc">
+    <img src="https://img.shields.io/badge/node-20.19-339933?logo=node.js" alt="Node">
+  </a>
+  <a href="https://nextjs.org">
+    <img src="https://img.shields.io/badge/Next.js-16.2-000000?logo=next.js" alt="Next.js">
+  </a>
+  <img src="https://img.shields.io/badge/tests-237%20passing-brightgreen" alt="Tests">
+</p>
 
 The bet: don't out-feature Postman. Win on **local, git-native, no-lock-in**. Your collections and environments are plain files you own.
 
-![next-postman — sending a request and inspecting the JSON response](docs/screenshot.png)
+---
 
 ## Features
 
@@ -23,44 +51,129 @@ The bet: don't out-feature Postman. Win on **local, git-native, no-lock-in**. Yo
 
 ## Tech Stack
 
-- [Next.js](https://nextjs.org) 16 (App Router) + [React](https://react.dev) 19
-- [Zustand](https://github.com/pmndrs/zustand) 5 for state
-- TypeScript, Material 3-style design
-- [Vitest](https://vitest.dev) — 188 tests across the request pipeline, parsers, and proxy route
-- Fonts self-hosted via [`next/font`](https://nextjs.org/docs/app/api-reference/components/font) (Roboto + Fira Code)
+| Layer      | Technology                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------- |
+| Framework  | [Next.js](https://nextjs.org) 16 (App Router) + [React](https://react.dev) 19                   |
+| State      | [Zustand](https://github.com/pmndrs/zustand) 5                                                  |
+| Language   | TypeScript 6                                                                                    |
+| Tests      | [Vitest](https://vitest.dev) (unit) + [Playwright](https://playwright.dev) (E2E)                |
+| Components | [Storybook](https://storybook.js.org) 10                                                        |
+| Linting    | ESLint + Prettier + Husky + lint-staged                                                         |
+| Fonts      | Roboto + Fira Code via [`next/font`](https://nextjs.org/docs/app/api-reference/components/font) |
 
 ## Getting Started
 
+### Prerequisites
+
+- **Node.js 20+** (see `.nvmrc`)
+- npm
+
+### Install & Run
+
 ```bash
+git clone https://github.com/Open-Source-BD/next-postman.git
+cd next-postman
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Other scripts:
+### Available Scripts
 
-```bash
-npm run build      # production build
-npm run test       # vitest
-npm run typecheck  # tsc --noEmit
-npm run lint       # eslint
-```
+| Command                   | Description                            |
+| ------------------------- | -------------------------------------- |
+| `npm run dev`             | Start dev server                       |
+| `npm run build`           | Production build                       |
+| `npm start`               | Start production server                |
+| `npm test`                | Run Vitest unit tests (237 tests)      |
+| `npm run test:e2e`        | Run Playwright E2E tests (7 tests)     |
+| `npm run typecheck`       | TypeScript type check (`tsc --noEmit`) |
+| `npm run lint`            | ESLint                                 |
+| `npm run format`          | Auto-format with Prettier              |
+| `npm run format:check`    | Check formatting without writing       |
+| `npm run storybook`       | Storybook dev server (port 6006)       |
+| `npm run build-storybook` | Build Storybook static export          |
+
+## Testing
+
+The project has three test layers:
+
+| Layer         | Command             | Count     | Environment           |
+| ------------- | ------------------- | --------- | --------------------- |
+| **Unit**      | `npm test`          | 237 tests | jsdom                 |
+| **E2E**       | `npm run test:e2e`  | 7 tests   | Playwright (Chromium) |
+| **Storybook** | `npm run storybook` | 5 stories | Browser               |
+
+Unit tests are co-located alongside source files (`file.test.ts` next to `file.ts`). E2E tests live in `e2e/`. Storybook stories are in `src/components/ui/*.stories.tsx`.
+
+### CI Pipeline
+
+Every push/PR to `main` runs in GitHub Actions:
+
+1. **`check`** — `typecheck` → `lint` → `format:check` → `test` → `commitlint`
+2. **`e2e`** (after `check`) — Playwright E2E against a production build
 
 ## Project Structure
 
 ```
 src/
   app/
-    api/proxy/route.ts    # CORS-free request proxy (decompress-safe)
-    api/stream/route.ts   # SSE streaming proxy
+    api/proxy/route.ts     # CORS-free request proxy (decompress-safe)
+    api/stream/route.ts    # SSE streaming proxy
     layout.tsx, page.tsx
   features/api-client/
-    components/           # UI (UrlBar, RequestPane, ResponsePane, modals, ...)
-    lib/                  # request pipeline, parsers, codegen, storage, realtime
-    store/                # Zustand store + selectors
-    types.ts
+    components/            # UI (UrlBar, RequestPane, ResponsePane, modals, ...)
+      request/             #   request-pane sub-components
+      response/            #   response-pane sub-components
+      realtime/            #   WebSocket/SSE panels
+      sidebar/             #   sidebar + history
+      tabs/                #   tab bar
+      collections/         #   collection tree
+      modals/              #   import/export dialogs
+    lib/                   # request pipeline, parsers, codegen, storage, realtime
+    store/                 # Zustand store + slices
+    types/                 # domain type files (http, realtime, tab, collection, env, import)
+  components/ui/           # shared UI components (PaneResizer, CodeView, KvEditor, ...)
 ```
+
+## Configuration
+
+next-postman requires **no environment variables**. All data persists to localStorage by default; optional git-native storage uses the File System Access API.
+
+| File                   | Purpose                            |
+| ---------------------- | ---------------------------------- |
+| `.nvmrc`               | Node.js version (20)               |
+| `.env.example`         | Documented (empty)                 |
+| `.prettierrc`          | Prettier config                    |
+| `commitlint.config.js` | Conventional commit rules          |
+| `.husky/`              | Git hooks (pre-commit, commit-msg) |
+| `vitest.config.ts`     | Test runner config                 |
+| `playwright.config.ts` | E2E test config                    |
+| `.storybook/`          | Storybook config                   |
+
+## Deployment
+
+One-click deploy on [Vercel](https://vercel.com):
+
+1. Push your fork to GitHub
+2. Import the repo at [vercel.com/import](https://vercel.com/import)
+3. No environment variables needed
+4. The proxy route automatically supports up to 30s requests (`maxDuration`)
+
+> **Note on localhost APIs:** The deployed app's server-side proxy runs on Vercel's infrastructure and cannot reach your machine's `localhost`. For localhost targets, the app automatically falls back to browser-direct fetch. If your local API lacks CORS headers, add `Access-Control-Allow-Origin: https://<your-app>.vercel.app` or run the app locally with `npm run dev`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Quick start:
+
+```bash
+npm run typecheck && npm run lint && npm test && npm run build
+```
+
+Commits must follow [Conventional Commits](https://www.conventionalcommits.org/) (`type(scope): desc`). The pre-commit hook auto-formats staged files.
 
 ## Related Work
 
@@ -86,4 +199,4 @@ next-postman is closest in spirit to **Bruno** (git-native, no-lock-in) but runs
 
 ## License
 
-[MIT](LICENSE) © Shamirul Islam
+[MIT](LICENSE) © 2026 Shamirul Islam

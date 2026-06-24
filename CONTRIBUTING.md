@@ -23,13 +23,25 @@ npm run dev
 | `npm run format`    | Auto-format with Prettier |
 | `npm run build`     | Production build          |
 
+## Commit Convention
+
+Commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+type(scope): description
+```
+
+Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `style`. Scopes include `proxy`, `runner`, `realtime`, `storage`, `ui`, `types`, `store`, `ci`, `deps`.
+
+The commit-msg hook enforces this automatically.
+
 ## Before Committing
 
 1. **Run checks locally:**
    ```bash
    npm run typecheck && npm run lint && npm test && npm run build
    ```
-2. **Pre-commit hook** auto-formats staged files. If it fails, fix the issue and re-stage.
+2. **Pre-commit hook** auto-formats staged files with lint-staged. If it fails, fix the issue and re-stage.
 
 ## Pull Request Guidelines
 
