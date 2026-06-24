@@ -596,7 +596,9 @@ export const useApiStore = create<ApiState>((set, get) => ({
     const expanded: Record<string, boolean> = {};
     collections.forEach((c) => { expanded[c.id] = true; });
 
-    const tabs = data.tabs && data.tabs.length ? data.tabs : [createDefaultTab()];
+    const tabs = data.tabs && data.tabs.length
+      ? data.tabs.map(t => ({ ...t, protocol: t.protocol ?? 'http' }))
+      : [createDefaultTab()];
     const activeTabId = data.activeTabId && tabs.some((t) => t.id === data.activeTabId)
       ? data.activeTabId
       : tabs[0].id;
